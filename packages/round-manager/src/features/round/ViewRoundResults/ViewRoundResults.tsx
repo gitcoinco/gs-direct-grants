@@ -33,6 +33,7 @@ import { setReadyForPayout } from "../../api/round";
 import { errorModalDelayMs } from "../../../constants";
 import { useRoundById } from "../../../context/round/RoundContext";
 import { TransactionResponse } from "@ethersproject/providers";
+import { Button } from "common/src/styles";
 
 // CHECK: should this be in common? Josef: yes indeed
 function horizontalTabStyles(selected: boolean) {
@@ -417,7 +418,33 @@ export default function ViewRoundResults() {
             </div>
           </Tab.Panel>
           <Tab.Panel>
-            <div>{/* raw round data content here */}</div>
+            <div className={"flex flex-col justify-start items-start"}>
+              <div
+                className={
+                  "text-sm leading-5 text-gray-400 text-left -mt-4 mb-8"
+                }
+              >
+                Use the data models provided to analyze your round results
+                in-depth.
+              </div>
+
+              <div
+                className={
+                  "text-sm leading-5 text-gray-500 font-semibold text-left mb-6"
+                }
+              >
+                Round Generated Data
+              </div>
+              <div className={"text-sm leading-5 text-left mb-4"}>
+                Download the raw data for your round, which is separated into
+                four data tables: raw votes, projects, round, and prices.
+              </div>
+              <Button className={"flex gap-3"}>
+                {" "}
+                <DownloadIcon className="h-5 w-5" />
+                Raw data
+              </Button>
+            </div>
           </Tab.Panel>
         </Tab.Panels>
       </Tab.Group>
