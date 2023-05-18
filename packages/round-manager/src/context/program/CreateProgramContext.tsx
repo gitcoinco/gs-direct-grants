@@ -1,10 +1,12 @@
-import { ProgressStatus, Web3Instance } from "../../features/api/types";
+import { ProgressStatus } from "../../features/api/types";
 import { waitForSubgraphSyncTo } from "../../features/api/subgraph";
 import React, { createContext, useContext, useReducer } from "react";
-import { useWallet } from "../../features/common/Auth";
 import { saveToIPFS } from "../../features/api/ipfs";
 import { deployProgramContract } from "../../features/api/program";
 import { datadogLogs } from "@datadog/browser-logs";
+import { useWalletClient, WalletClient } from "wagmi";
+import { PublicClient } from "viem";
+import { getPublicClient } from "@wagmi/core";
 
 export interface CreateProgramState {
   IPFSCurrentStatus: ProgressStatus;
@@ -16,7 +18,7 @@ interface _createProgramParams {
   dispatch: Dispatch;
   programName: string;
   operatorWallets: string[];
-  signerOrProvider: Web3Instance["provider"];
+  walletClient: WalletClient;
 }
 
 type Action =
@@ -116,14 +118,14 @@ const _createProgram = async ({
   dispatch,
   programName,
   operatorWallets,
-  signerOrProvider,
+  walletClient,
 }: _createProgramParams) => {
   dispatch({
     type: ActionType.RESET_TO_INITIAL_STATE,
   });
   try {
     const IpfsHash = await storeDocument(dispatch, programName);
-
+    const publicClient = getPublicClient();
     const metadata = {
       protocol: 1,
       pointer: IpfsHash,
@@ -132,12 +134,12 @@ const _createProgram = async ({
       dispatch,
       metadata,
       operatorWallets,
-      signerOrProvider
+      walletClient
     );
 
     await waitForSubgraphToUpdate(
       dispatch,
-      signerOrProvider,
+      publicClient,
       transactionBlockNumber
     );
   } catch (error) {
@@ -151,15 +153,14 @@ export const useCreateProgram = () => {
     throw new Error("useCreateProgram must be used within a ProgramProvider");
   }
 
-  const { signer: walletSigner } = useWallet();
+  const { data: walletClient } = useWalletClient();
 
   const createProgram = (programName: string, operatorWallets: string[]) => {
     return _createProgram({
       dispatch: context.dispatch,
       programName: programName,
       operatorWallets,
-      // @ts-expect-error TODO: resolve this situation around signers and providers
-      signerOrProvider: walletSigner,
+      walletClient: walletClient as WalletClient,
     });
   };
 
@@ -211,7 +212,7 @@ async function deployContract(
   dispatch: (action: Action) => void,
   metadata: { protocol: number; pointer: string },
   operatorWallets: string[],
-  signerOrProvider: Web3Instance["provider"]
+  walletClient: WalletClient
 ) {
   try {
     dispatch({
@@ -221,8 +222,7 @@ async function deployContract(
 
     const { transactionBlockNumber } = await deployProgramContract({
       program: { store: metadata, operatorWallets },
-      // @ts-expect-error TODO: resolve this situation around signers and providers
-      signerOrProvider: signerOrProvider,
+      walletClient,
     });
 
     dispatch({
@@ -245,8 +245,8 @@ async function deployContract(
 
 async function waitForSubgraphToUpdate(
   dispatch: (action: Action) => void,
-  signerOrProvider: Web3Instance["provider"],
-  transactionBlockNumber: number
+  publicClient: PublicClient,
+  transactionBlockNumber: bigint
 ) {
   try {
     datadogLogs.logger.error(
@@ -258,8 +258,7 @@ async function waitForSubgraphToUpdate(
       payload: { indexingStatus: ProgressStatus.IN_PROGRESS },
     });
 
-    // @ts-expect-error TODO: resolve this situation around signers and providers
-    const chainId = await signerOrProvider.getChainId();
+    const chainId = await publicClient.getChainId();
 
     await waitForSubgraphSyncTo(chainId, transactionBlockNumber);
 

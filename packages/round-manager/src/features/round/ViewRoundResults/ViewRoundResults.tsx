@@ -1,6 +1,5 @@
 import { useCallback, useState, useRef, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { BigNumber, ethers, utils } from "ethers";
 import { RadioGroup, Tab } from "@headlessui/react";
 import { ExclamationCircleIcon as NoInformationIcon } from "@heroicons/react/outline";
 import {
@@ -20,22 +19,30 @@ import {
 import { LoadingRing, Spinner } from "../../common/Spinner";
 import { stringify } from "csv-stringify/sync";
 import { Input } from "csv-stringify/lib";
-import { useNetwork, useSigner } from "wagmi";
+import {
+  useContractWrite,
+  useNetwork,
+  usePublicClient,
+  useWalletClient,
+} from "wagmi";
 import InfoModal from "../../common/InfoModal";
 import ProgressModal from "../../common/ProgressModal";
 import ErrorModal from "../../common/ErrorModal";
 import { useFinalizeRound } from "../../../context/round/FinalizeRoundContext";
-import { setReadyForPayout } from "../../api/round";
 import { errorModalDelayMs } from "../../../constants";
 import { useRoundById } from "../../../context/round/RoundContext";
 import { payoutTokens, fetchFromIPFS } from "../../api/utils";
 import { roundApplicationsToCSV } from "../../api/exports";
-import { Signer } from "@ethersproject/abstract-signer";
+import { roundImplementationContract } from "../../api/contracts";
 import {
-  merklePayoutStrategyImplementationContract,
-  roundImplementationContract,
-} from "../../api/contracts";
-import { TransactionResponse } from "@ethersproject/providers";
+  getAddress,
+  formatUnits as viemFormatUnits,
+  PublicClient,
+  getContract,
+  Hex,
+} from "viem";
+import { abi } from "../../api/abi/RoundImplementationABI";
+import merklePayoutStrategyImplementationABI from "../../api/abi/payoutStrategy/MerklePayoutStrategyImplementationABI";
 
 type RevisedMatch = {
   revisedContributionCount: number;
@@ -70,37 +77,41 @@ type FinalizedMatches = {
 
 async function fetchFinalizedMatches(
   roundId: string,
-  signer: Signer
+  publicClient: PublicClient
 ): Promise<FinalizedMatches | undefined> {
-  const roundImplementation = new ethers.Contract(
-    roundId,
-    roundImplementationContract.abi,
-    signer
-  );
+  const roundImplementation = getContract({
+    address: roundId as Hex,
+    abi: abi,
+    publicClient,
+  });
 
-  const filter =
-    roundImplementation.filters.PayFeeAndEscrowFundsToPayoutContract();
+  const payoutFilter =
+    await roundImplementation.createEventFilter.PayFeeAndEscrowFundsToPayoutContract(
+      {
+        fromBlock: BigInt(0),
+        toBlock: "latest",
+      }
+    );
 
-  const payoutEvents = await roundImplementation.provider.getLogs({
-    ...filter,
-    fromBlock: 0,
-    toBlock: "latest",
+  const payoutEvents = await publicClient.getFilterLogs({
+    filter: payoutFilter,
   });
 
   if (payoutEvents.length > 0) {
-    const readyForPayoutTransactionHash = payoutEvents[0].transactionHash;
+    const readyForPayoutTransactionHash = payoutEvents[0].transactionHash ?? "";
 
-    const payoutStrategyAddress = await roundImplementation.payoutStrategy();
+    const payoutStrategyAddress =
+      await roundImplementation.read.payoutStrategy();
 
-    const payoutStrategy = new ethers.Contract(
-      payoutStrategyAddress,
-      merklePayoutStrategyImplementationContract.abi,
-      signer
-    );
+    const payoutStrategy = getContract({
+      address: payoutStrategyAddress,
+      abi: merklePayoutStrategyImplementationABI,
+      publicClient,
+    });
 
-    const distributionMetaPtr = await payoutStrategy.distributionMetaPtr();
+    const distributionMetaPtr = await payoutStrategy.read.distributionMetaPtr();
 
-    const distribution = await fetchFromIPFS(distributionMetaPtr.pointer);
+    const distribution = await fetchFromIPFS(distributionMetaPtr[1]);
 
     const distributionMatches =
       distribution.matchingDistribution as MatchingStatsData[];
@@ -113,8 +124,8 @@ async function fetchFinalizedMatches(
         projectName: m.projectName,
         contributionsCount: 0,
         revisedContributionCount: m.contributionsCount,
-        matched: BigNumber.from(m.originalMatchAmountInToken ?? 0).toBigInt(),
-        revisedMatch: BigNumber.from(m.matchAmountInToken ?? 0).toBigInt(),
+        matched: m.originalMatchAmountInToken,
+        revisedMatch: m.matchAmountInToken,
       };
     });
 
@@ -132,10 +143,10 @@ async function fetchFinalizedMatches(
  */
 function useRevisedMatchingFunds(
   roundId: string,
-  signer: Signer | undefined,
   ignoreSaturation: boolean,
   overridesFile?: File
 ) {
+  const publicClient = usePublicClient();
   const originalMatches = useRoundMatchingFunds(roundId);
   const revisedMatches = useRoundMatchingFunds(
     roundId,
@@ -149,16 +160,16 @@ function useRevisedMatchingFunds(
   >(undefined);
 
   async function reloadFinalizedMatches() {
-    if (!signer) return;
     try {
       setFinalizedMatchesLoading(true);
-      const res = await fetchFinalizedMatches(roundId, signer);
+      const res = await fetchFinalizedMatches(roundId, publicClient);
       setFinalizedMatches(res);
     } finally {
       setFinalizedMatchesLoading(false);
     }
   }
 
+  // TODO: ???
   useEffect(() => {
     let active = true;
 
@@ -170,11 +181,11 @@ function useRevisedMatchingFunds(
 
     async function load() {
       // TODO: ~signer.call is a check to avoid calling contracts on a mocked signer
-      if (!signer || !signer.call) return;
+      if (!publicClient || !publicClient.call) return;
 
       try {
         setFinalizedMatchesLoading(true);
-        const res = await fetchFinalizedMatches(roundId, signer);
+        const res = await fetchFinalizedMatches(roundId, publicClient);
         setFinalizedMatches(res);
         if (!active) {
           return;
@@ -183,7 +194,7 @@ function useRevisedMatchingFunds(
         setFinalizedMatchesLoading(false);
       }
     }
-  }, [signer, roundId]);
+  }, [publicClient, roundId]);
 
   const isRevised =
     (Boolean(overridesFile) || ignoreSaturation) && !revisedMatches.isLoading;
@@ -261,11 +272,18 @@ function useRevisedMatchingFunds(
 
 export default function ViewRoundResults() {
   const { chain } = useNetwork();
-  const { data: signer } = useSigner();
+  const { data: signer } = useWalletClient();
   const { id } = useParams();
-  const roundId = utils.getAddress(id as string);
+  const roundId = getAddress(id as string);
   const debugModeEnabled = useDebugMode();
   const network = useNetwork();
+
+  const { write: setReadyForPayout, status: readyForPayoutSuccess } =
+    useContractWrite({
+      abi: roundImplementationContract.abi,
+      address: roundId,
+      functionName: "setReadyForPayout",
+    });
 
   const matchingTableRef = useRef<HTMLDivElement>(null);
   const [overridesFileDraft, setOverridesFileDraft] = useState<
@@ -286,7 +304,6 @@ export default function ViewRoundResults() {
     mutate: reloadMatchingFunds,
   } = useRevisedMatchingFunds(
     roundId,
-    signer as Signer | undefined,
     distributionOption === "scale",
     overridesFile
   );
@@ -312,7 +329,7 @@ export default function ViewRoundResults() {
     useState(false);
 
   function formatUnits(value: bigint) {
-    return `${Number(utils.formatUnits(value, matchToken?.decimal)).toFixed(
+    return `${Number(viemFormatUnits(value, matchToken?.decimal ?? 18)).toFixed(
       4
     )} ${matchToken?.name}`;
   }
@@ -331,9 +348,6 @@ export default function ViewRoundResults() {
   const [warningModalOpen, setWarningModalOpen] = useState(false);
   const [progressModalOpen, setProgressModalOpen] = useState(false);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
-
-  const [readyForPayoutTransaction, setReadyforPayoutTransaction] =
-    useState<TransactionResponse>();
 
   const { finalizeRound, finalizeRoundToContractStatus, IPFSCurrentStatus } =
     useFinalizeRound();
@@ -360,18 +374,12 @@ export default function ViewRoundResults() {
           Number((BigInt(1000000) * match.revisedMatch) / round.matchAmount) /
           1000000,
         projectName: match.projectName,
-        matchAmountInToken: BigNumber.from(match.revisedMatch),
-        originalMatchAmountInToken: BigNumber.from(match.matched),
+        matchAmountInToken: match.revisedMatch,
+        originalMatchAmountInToken: match.matched,
       }));
 
       await finalizeRound(oldRoundFromGraph.payoutStrategy.id, matchingJson);
-
-      const setReadyForPayoutTx = await setReadyForPayout({
-        roundId: round.id,
-        signerOrProvider: signer,
-      });
-
-      setReadyforPayoutTransaction(setReadyForPayoutTx);
+      await setReadyForPayout();
       reloadMatchingFunds();
 
       setTimeout(() => {
@@ -403,7 +411,7 @@ export default function ViewRoundResults() {
       description: `The contract is being marked as eligible for payouts.`,
       status:
         finalizeRoundToContractStatus === ProgressStatus.IS_SUCCESS
-          ? readyForPayoutTransaction
+          ? readyForPayoutSuccess == "success"
             ? ProgressStatus.IS_SUCCESS
             : ProgressStatus.IN_PROGRESS
           : ProgressStatus.NOT_STARTED,
@@ -413,7 +421,7 @@ export default function ViewRoundResults() {
       description: "We’re wrapping up.",
       status:
         finalizeRoundToContractStatus === ProgressStatus.IS_SUCCESS &&
-        readyForPayoutTransaction !== undefined
+        readyForPayoutSuccess == "success"
           ? ProgressStatus.IN_PROGRESS
           : ProgressStatus.NOT_STARTED,
     },
@@ -578,9 +586,9 @@ export default function ViewRoundResults() {
                                     </td>
                                     <td className="text-sm leading-5 px-2 text-gray-400 text-left">
                                       {Number(
-                                        utils.formatUnits(
+                                        viemFormatUnits(
                                           match.matched,
-                                          matchToken?.decimal
+                                          matchToken?.decimal ?? 18
                                         )
                                       ).toFixed(4)}{" "}
                                       {matchToken?.name}
@@ -588,9 +596,9 @@ export default function ViewRoundResults() {
                                     {shouldShowRevisedTable && (
                                       <td className="text-sm leading-5 px-2 text-gray-400 text-left">
                                         {Number(
-                                          utils.formatUnits(
+                                          viemFormatUnits(
                                             match.revisedMatch,
-                                            matchToken?.decimal
+                                            matchToken?.decimal ?? 18
                                           )
                                         ).toFixed(4)}{" "}
                                         {matchToken?.name}

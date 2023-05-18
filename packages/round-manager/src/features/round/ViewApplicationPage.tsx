@@ -14,7 +14,6 @@ import {
 } from "react-router-dom";
 import ConfirmationModal from "../common/ConfirmationModal";
 import Navbar from "../common/Navbar";
-import { useWallet } from "../common/Auth";
 import { Button } from "common/src/styles";
 import { ReactComponent as TwitterIcon } from "../../assets/twitter-logo.svg";
 import { ReactComponent as GithubIcon } from "../../assets/github-logo.svg";
@@ -32,7 +31,6 @@ import {
 } from "../api/types";
 import { VerifiableCredential } from "@gitcoinco/passport-sdk-types";
 import { Lit } from "../api/lit";
-import { utils } from "ethers";
 import NotFoundPage from "../common/NotFoundPage";
 import AccessDenied from "../common/AccessDenied";
 import { useApplicationByRoundId } from "../../context/application/ApplicationContext";
@@ -49,6 +47,8 @@ import {
 } from "common";
 import { renderToHTML } from "common";
 import { useDebugMode } from "../../hooks";
+import { getAddress } from "viem";
+import { useAccount, useNetwork } from "wagmi";
 
 type ApplicationStatus = "APPROVED" | "REJECTED";
 
@@ -78,10 +78,12 @@ export default function ViewApplicationPage() {
   });
 
   const { roundId, id } = useParams() as { roundId: string; id: string };
-  const { chain, address } = useWallet();
+  const { address } = useAccount();
+  const { chain } = useNetwork();
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { applications, isLoading } = useApplicationByRoundId(roundId!);
+  const { applications, isLoading } = useApplicationByRoundId(
+    roundId as string
+  );
   const filteredApplication = applications?.filter((a) => a.id == id) || [];
   const application = filteredApplication[0];
 
@@ -236,7 +238,9 @@ export default function ViewApplicationPage() {
       }
 
       if (round) {
-        setHasAccess(!!round.operatorWallets?.includes(address?.toLowerCase()));
+        setHasAccess(
+          !!round.operatorWallets?.includes(address?.toLowerCase() ?? "")
+        );
       }
     }
   }, [address, application, isLoading, round, debugModeEnabled]);
@@ -263,8 +267,8 @@ export default function ViewApplicationPage() {
               const encryptedString: Blob = await response.blob();
 
               const lit = new Lit({
-                chain: chain.name.toLowerCase(),
-                contract: utils.getAddress(roundId),
+                chain: chain?.name.toLowerCase() ?? "",
+                contract: getAddress(roundId),
               });
 
               const decryptedString = await lit.decryptString(

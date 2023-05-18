@@ -9,13 +9,7 @@ import {
   wrapWithReadProgramContext,
   wrapWithRoundContext,
 } from "../../../test-utils";
-import {
-  useAccount,
-  useBalance,
-  useDisconnect,
-  useSwitchNetwork,
-  useSigner,
-} from "wagmi";
+import { useAccount, useBalance, useDisconnect, useSwitchNetwork } from "wagmi";
 import { useParams } from "react-router-dom";
 import { faker } from "@faker-js/faker";
 import { useTokenPrice } from "common";
@@ -88,12 +82,6 @@ describe("fund contract tab", () => {
 
     (useAccount as jest.Mock).mockImplementation(() => ({
       address: faker.finance.ethereumAddress(),
-    }));
-
-    (useSigner as jest.Mock).mockImplementation(() => ({
-      signer: {
-        getBalance: () => Promise.resolve("0"),
-      },
     }));
 
     render(

@@ -2,9 +2,9 @@ import { makeGrantApplicationData } from "../../../test-utils";
 import { getApplicationById, getApplicationsByRoundId } from "../application";
 import { fetchFromIPFS } from "../utils";
 import { GrantApplication } from "../types";
-import { Contract } from "ethers";
-import { Web3Provider } from "@ethersproject/providers";
 import { graphql_fetch } from "common";
+import { getContract } from "viem";
+import { publicClient } from "../../../app/wagmi";
 
 jest.mock("../utils", () => ({
   ...jest.requireActual("../utils"),
@@ -15,11 +15,7 @@ jest.mock("common", () => ({
   graphql_fetch: jest.fn(),
 }));
 
-jest.mock("ethers");
-
-const signerOrProviderStub = {
-  getNetwork: async () => Promise.resolve({ chainId: "chain" }),
-} as unknown as Web3Provider;
+jest.mock("viem");
 
 describe("getApplicationById", () => {
   let expectedApplication: GrantApplication;
@@ -30,10 +26,9 @@ describe("getApplicationById", () => {
       (it) => it.address
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (Contract as any).mockImplementation(() => {
+    (getContract as jest.Mock).mockImplementation(() => {
       return {
-        getProjectOwners: () => projectOwners,
+        read: { getProjectOwners: () => projectOwners },
       };
     });
   });
@@ -82,7 +77,7 @@ describe("getApplicationById", () => {
 
     const actualApplication = await getApplicationById(
       applicationId,
-      signerOrProviderStub
+      publicClient({})
     );
 
     console.log("actualApplication", actualApplication);
@@ -105,7 +100,7 @@ describe("getApplicationById", () => {
 
     const getApplicationByIdPromise = getApplicationById(
       "any-id",
-      signerOrProviderStub
+      publicClient({})
     );
 
     await expect(getApplicationByIdPromise).rejects.toThrow(
@@ -162,7 +157,7 @@ describe("getApplicationById", () => {
 
     const actualApplication = await getApplicationById(
       applicationId,
-      signerOrProviderStub
+      publicClient({})
     );
 
     // Todo: need to be fixed to check whether if the entire application matches with expectedApplication
@@ -222,7 +217,7 @@ describe("getApplicationsByRoundId", () => {
 
     const actualApplications = await getApplicationsByRoundId(
       roundId,
-      signerOrProviderStub
+      publicClient({})
     );
 
     // Todo: need to be fixed to check whether if the entire application matches with expectedApplication
@@ -277,7 +272,7 @@ describe("getApplicationsByRoundId", () => {
 
     const actualApplications = await getApplicationsByRoundId(
       roundId,
-      signerOrProviderStub
+      publicClient({})
     );
 
     // Todo: need to be fixed to check whether if the entire application matches with expectedApplication

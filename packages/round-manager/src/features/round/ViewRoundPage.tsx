@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { datadogLogs } from "@datadog/browser-logs";
 import { Tab } from "@headlessui/react";
 import {
@@ -29,7 +28,6 @@ import {
   Round,
 } from "../api/types";
 import AccessDenied from "../common/AccessDenied";
-import { useWallet } from "../common/Auth";
 import CopyToClipboardButton from "../common/CopyToClipboardButton";
 import Footer from "common/src/components/Footer";
 import Navbar from "../common/Navbar";
@@ -45,12 +43,15 @@ import ViewFundGrantees from "./ViewFundGrantees";
 import ViewRoundResults from "./ViewRoundResults/ViewRoundResults";
 import ViewRoundSettings from "./ViewRoundSettings";
 import ViewRoundStats from "./ViewRoundStats";
+import { useDebugMode } from "../../hooks";
+import { useAccount, useNetwork } from "wagmi";
 
 export default function ViewRoundPage() {
   datadogLogs.logger.info("====> Route: /round/:id");
   datadogLogs.logger.info(`====> URL: ${window.location.href}`);
   const { id } = useParams();
-  const { address, chain } = useWallet();
+  const { chain } = useNetwork();
+  const { address } = useAccount();
 
   const { round, fetchRoundStatus, error } = useRoundById(id?.toLowerCase());
   const isRoundsFetched =
@@ -73,7 +74,7 @@ export default function ViewRoundPage() {
           setHasAccess(true);
           return;
         }
-        round.operatorWallets?.includes(address?.toLowerCase())
+        round.operatorWallets?.includes(address?.toLowerCase() ?? "")
           ? setHasAccess(true)
           : setHasAccess(false);
       } else {
@@ -312,7 +313,7 @@ export default function ViewRoundPage() {
                         applications={applications}
                         isRoundsFetched={isRoundsFetched}
                         fetchRoundStatus={fetchRoundStatus}
-                        chainId={`${chain.id}`}
+                        chainId={`${chain?.id}`}
                         roundId={id}
                       />
                     </Tab.Panel>

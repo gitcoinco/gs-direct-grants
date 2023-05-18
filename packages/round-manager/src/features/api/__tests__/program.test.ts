@@ -3,6 +3,7 @@ import { Program } from "../types";
 import { makeProgramData } from "../../../test-utils";
 import { fetchFromIPFS, ChainId, CHAINS } from "../utils";
 import { graphql_fetch } from "common";
+import { publicClient } from "../../../app/wagmi";
 
 jest.mock("../utils", () => ({
   ...jest.requireActual("../utils"),
@@ -49,11 +50,10 @@ describe("listPrograms", () => {
       name: expectedProgram.metadata?.name,
     });
 
-    const actualPrograms = await listPrograms("0x0", {
-      getNetwork: async () =>
-        // @ts-expect-error Test file
-        Promise.resolve({ chainId: ChainId.GOERLI_CHAIN_ID }),
-    });
+    const actualPrograms = await listPrograms(
+      "0x0",
+      publicClient({ chainId: 5 })
+    );
 
     expect(actualPrograms).toEqual(expectedPrograms);
   });
@@ -92,11 +92,10 @@ describe("getProgramById", () => {
       name: expectedProgram.metadata?.name,
     });
 
-    const actualProgram = await getProgramById(programId as string, {
-      getNetwork: async () =>
-        // @ts-expect-error Test file
-        Promise.resolve({ chainId: ChainId.GOERLI_CHAIN_ID }),
-    });
+    const actualProgram = await getProgramById(
+      programId as string,
+      publicClient({ chainId: 5 })
+    );
 
     expect(actualProgram).toEqual(expectedProgram);
     const graphqlFetchCall = (graphql_fetch as jest.Mock).mock.calls[0];

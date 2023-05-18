@@ -8,7 +8,7 @@ import {
 } from "../../../test-utils";
 import ReclaimFunds from "../ReclaimFunds";
 import { ProgressStatus, Round } from "../../api/types";
-import { useBalance, useDisconnect, useSigner, useSwitchNetwork } from "wagmi";
+import { useBalance, useDisconnect, useSwitchNetwork } from "wagmi";
 import ViewRoundPage from "../ViewRoundPage";
 import { useParams } from "react-router-dom";
 import { useTokenPrice } from "common";
@@ -103,12 +103,6 @@ describe("ReclaimFunds", () => {
         data: { formatted: "0", value: "0" },
         error: null,
         loading: false,
-      }));
-
-      (useSigner as jest.Mock).mockImplementation(() => ({
-        signer: {
-          getBalance: () => Promise.resolve("0"),
-        },
       }));
 
       render(

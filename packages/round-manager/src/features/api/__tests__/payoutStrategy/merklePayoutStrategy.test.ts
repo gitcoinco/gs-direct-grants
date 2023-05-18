@@ -10,21 +10,10 @@ jest.mock("../../round");
 
 jest.mock("common");
 
-jest.mock("../../../api/types", () => ({
-  ...jest.requireActual("../../../api/types"),
-}));
-
 jest.mock("../../utils", () => ({
   ...jest.requireActual("../../utils"),
   graphql_fetch: jest.fn(),
   fetchFromIPFS: jest.fn(),
-}));
-
-jest.mock("react-router-dom", () => ({
-  ...jest.requireActual("react-router-dom"),
-  useOutletContext: () => ({
-    data: {},
-  }),
 }));
 
 jest.mock("react", () => ({

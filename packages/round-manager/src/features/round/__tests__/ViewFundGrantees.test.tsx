@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { ethers } from "ethers";
 import { act } from "react-dom/test-utils";
 import { useParams } from "react-router-dom";
 import { useBalance, useDisconnect, useSwitchNetwork } from "wagmi";
@@ -16,6 +15,7 @@ import * as merklePayoutStrategy from "../../api/payoutStrategy/merklePayoutStra
 import * as roundTs from "../../api/round";
 import { MatchingStatsData, ProgressStatus, Round } from "../../api/types";
 import ViewFundGrantees from "../ViewFundGrantees";
+import { parseEther } from "viem";
 
 jest.mock("../../common/Auth");
 jest.mock("wagmi");
@@ -70,7 +70,10 @@ describe("View Fund Grantees", () => {
       uniqueContributorsCount: 10,
       matchPoolPercentage: 0.1,
       projectId: "0x1",
-      matchAmountInToken: ethers.utils.parseEther("1.11"),
+      matchAmountInToken: parseEther("1.11"),
+      originalMatchAmountInToken: parseEther("1.11"),
+      applicationId: "0",
+      contributionsCount: 10,
       projectPayoutAddress: "0x00000000000000000000000000000000000000001",
     },
     {
@@ -79,7 +82,10 @@ describe("View Fund Grantees", () => {
       uniqueContributorsCount: 20,
       matchPoolPercentage: 0.2,
       projectId: "0x2",
-      matchAmountInToken: ethers.utils.parseEther("2.22"),
+      originalMatchAmountInToken: parseEther("2.22"),
+      applicationId: "1",
+      contributionsCount: 10,
+      matchAmountInToken: parseEther("2.22"),
       projectPayoutAddress: "0x00000000000000000000000000000000000000002",
     },
     {
@@ -88,7 +94,10 @@ describe("View Fund Grantees", () => {
       uniqueContributorsCount: 30,
       matchPoolPercentage: 0.3,
       projectId: "0x3",
-      matchAmountInToken: ethers.utils.parseEther("3.33"),
+      matchAmountInToken: parseEther("3.33"),
+      originalMatchAmountInToken: parseEther("3.33"),
+      applicationId: "3",
+      contributionsCount: 10,
       projectPayoutAddress: "0x00000000000000000000000000000000000000003",
     },
     {
@@ -97,7 +106,10 @@ describe("View Fund Grantees", () => {
       uniqueContributorsCount: 40,
       matchPoolPercentage: 0.4,
       projectId: "0x4",
-      matchAmountInToken: ethers.utils.parseEther("4.44"),
+      matchAmountInToken: parseEther("4.44"),
+      originalMatchAmountInToken: parseEther("4.44"),
+      applicationId: "4",
+      contributionsCount: 10,
       projectPayoutAddress: "0x00000000000000000000000000000000000000004",
     },
   ];
@@ -269,7 +281,7 @@ describe("View Fund Grantees", () => {
 
     it("Should show the confirmation modal and close on cancel", async () => {
       (useBalance as jest.Mock).mockImplementation(() => ({
-        data: { formatted: "0", value: ethers.utils.parseEther("1000") },
+        data: { formatted: "0", value: parseEther("1000") },
         error: null,
         loading: false,
       }));
@@ -295,7 +307,7 @@ describe("View Fund Grantees", () => {
 
     it("Should show the progress modal", async () => {
       (useBalance as jest.Mock).mockImplementation(() => ({
-        data: { formatted: "0", value: ethers.utils.parseEther("1000") },
+        data: { formatted: "0", value: parseEther("1000") },
         error: null,
         loading: false,
       }));

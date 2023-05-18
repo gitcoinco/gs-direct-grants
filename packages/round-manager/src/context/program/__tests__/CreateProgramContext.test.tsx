@@ -8,6 +8,8 @@ import {
   useCreateProgram,
 } from "../CreateProgramContext";
 import { faker } from "@faker-js/faker";
+import { WagmiConfig } from "wagmi";
+import { client } from "../../../app/wagmi";
 
 const mockWallet = {
   address: "0x0",
@@ -24,8 +26,9 @@ jest.mock("../../../features/api/subgraph");
 jest.mock("../../../features/common/Auth", () => ({
   useWallet: () => mockWallet,
 }));
-jest.mock("wagmi");
+
 jest.mock("@rainbow-me/rainbowkit", () => ({
+  ...jest.requireActual("@rainbow-me/rainbowkit"),
   ConnectButton: jest.fn(),
 }));
 
@@ -333,5 +336,9 @@ const TestUseCreateProgramComponent = () => {
 };
 
 function renderWithProvider(ui: JSX.Element) {
-  render(<CreateProgramProvider>{ui}</CreateProgramProvider>);
+  render(
+    <WagmiConfig config={client}>
+      <CreateProgramProvider>{ui}</CreateProgramProvider>
+    </WagmiConfig>
+  );
 }

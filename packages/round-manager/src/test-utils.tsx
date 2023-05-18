@@ -1,13 +1,8 @@
 import { faker } from "@faker-js/faker";
-import { ReduxRouter } from "@lagunovsky/redux-react-router";
 import { render } from "@testing-library/react";
 import { randomInt } from "crypto";
-import { BigNumber, ethers } from "ethers";
-import { formatBytes32String, parseEther } from "ethers/lib/utils";
 import React from "react";
-import { Provider } from "react-redux";
-import { MemoryRouter } from "react-router-dom";
-import { store } from "./app/store";
+import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import {
   ApplicationContext,
   ApplicationState,
@@ -45,7 +40,10 @@ import {
   Round,
 } from "./features/api/types";
 import { IAM_SERVER } from "./features/round/ViewApplicationPage";
-import history from "./history";
+
+import { stringToHex, zeroAddress } from "viem";
+import { WagmiConfig } from "wagmi";
+import { client } from "./app/wagmi";
 
 export const makeProgramData = (overrides: Partial<Program> = {}): Program => ({
   id: faker.finance.ethereumAddress(),
@@ -96,7 +94,7 @@ export const makeRoundData = (overrides: Partial<Round> = {}): Round => {
     applicationsEndTime,
     roundStartTime,
     roundEndTime,
-    token: ethers.constants.AddressZero, // to match our token list
+    token: zeroAddress, // to match our token list
     votingStrategy: faker.finance.ethereumAddress(),
     payoutStrategy: {
       id: faker.finance.ethereumAddress(),
@@ -115,12 +113,12 @@ export const makeMatchingStatsData = (): MatchingStatsData => {
   return {
     projectName: faker.company.name(),
     applicationId: faker.datatype.number().toString(),
-    projectId: formatBytes32String(faker.company.name().slice(0, 31)),
+    projectId: stringToHex(faker.company.name().slice(0, 31)),
     uniqueContributorsCount: faker.datatype.number(),
     contributionsCount: faker.datatype.number(),
     matchPoolPercentage: faker.datatype.number(),
-    matchAmountInToken: parseEther(faker.datatype.number().toString()),
-    originalMatchAmountInToken: parseEther(faker.datatype.number().toString()),
+    matchAmountInToken: faker.number.bigInt(),
+    originalMatchAmountInToken: faker.number.bigInt(),
     projectPayoutAddress: faker.finance.ethereumAddress(),
   };
 };
@@ -147,7 +145,7 @@ export type QFDistribution = {
   matchAmountInUSD: number;
   totalContributionsInUSD: number;
   matchPoolPercentage: number;
-  matchAmountInToken: BigNumber;
+  matchAmountInToken: bigint;
   projectPayoutAddress: string;
   uniqueContributorsCount: number;
   revisedMatch: bigint;
@@ -161,7 +159,7 @@ export const makeQFDistribution = (): QFDistribution => {
     matchAmountInUSD: faker.datatype.number(),
     totalContributionsInUSD: faker.datatype.number(),
     matchPoolPercentage: faker.datatype.number(),
-    matchAmountInToken: parseEther(faker.datatype.number().toString()),
+    matchAmountInToken: faker.number.bigInt(),
     projectPayoutAddress: faker.finance.ethereumAddress(),
     uniqueContributorsCount: faker.datatype.number(),
     revisedMatch: BigInt(1),
@@ -312,16 +310,9 @@ export const makeProjectCredentials = (
 };
 
 export const renderWrapped = (ui: JSX.Element) => {
-  render(
-    <Provider store={store}>
-      <ReduxRouter store={store} history={history}>
-        {ui}
-      </ReduxRouter>
-    </Provider>
-  );
+  render(<BrowserRouter>{ui}</BrowserRouter>);
 };
 
-// TODO finish and replace other renderWrapped function @vacekj
 export const renderWithProgramContext = (
   ui: JSX.Element,
   programStateOverrides: Partial<ReadProgramState> = {},
@@ -330,36 +321,16 @@ export const renderWithProgramContext = (
 ) =>
   render(
     <MemoryRouter>
-      <ReadProgramContext.Provider
-        value={{
-          state: { ...initialReadProgramState, ...programStateOverrides },
-          dispatch,
-        }}
-      >
-        {ui}
-      </ReadProgramContext.Provider>
-    </MemoryRouter>
-  );
-
-export const renderWithApplicationContext = (
-  ui: JSX.Element,
-  grantApplicationStateOverrides: Partial<ApplicationState> = {},
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dispatch: any = jest.fn()
-) =>
-  render(
-    <MemoryRouter>
-      <ApplicationContext.Provider
-        value={{
-          state: {
-            ...initialApplicationState,
-            ...grantApplicationStateOverrides,
-          },
-          dispatch,
-        }}
-      >
-        {ui}
-      </ApplicationContext.Provider>
+      <WagmiConfig config={client}>
+        <ReadProgramContext.Provider
+          value={{
+            state: { ...initialReadProgramState, ...programStateOverrides },
+            dispatch,
+          }}
+        >
+          {ui}
+        </ReadProgramContext.Provider>
+      </WagmiConfig>
     </MemoryRouter>
   );
 
@@ -437,7 +408,6 @@ export const wrapWithRoundContext = (
 export const wrapWithBulkUpdateGrantApplicationContext = (
   ui: JSX.Element,
   bulkUpdateOverrides: Partial<BulkUpdateGrantApplicationState> = {}
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) => (
   <BulkUpdateGrantApplicationContext.Provider
     value={{
@@ -448,27 +418,3 @@ export const wrapWithBulkUpdateGrantApplicationContext = (
     {ui}
   </BulkUpdateGrantApplicationContext.Provider>
 );
-
-type ContextMock<T> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  context: React.Context<any>;
-  value: T;
-};
-
-/**
- * Wraps the element in an arbitrary amount of contexts for testing purposes
- * @param element the final child element. Can be a React component, an HTML tag, or even a string, null. etc. See ReactElement type
- * @param contexts the contexts to wrap the element with, including their values
- */
-export function wrapInContexts<T>(
-  element: React.ReactNode,
-  contexts: ContextMock<T>[]
-) {
-  return (
-    <>
-      {contexts.reduceRight((acc, { context, value }) => {
-        return <context.Provider value={value}>{acc}</context.Provider>;
-      }, element)}
-    </>
-  );
-}

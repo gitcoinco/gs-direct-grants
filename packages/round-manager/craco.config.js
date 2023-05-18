@@ -13,7 +13,7 @@ if (process.env.REACT_APP_ENV === "production") {
   plugins.push(
     new SentryWebpackPlugin({
       org: "gitcoin-protocol",
-      project: "grants-round-ge",
+      project: "grants-round-rm",
 
       // Specify the directory containing build artifacts
       include: "./build",
@@ -85,6 +85,13 @@ module.exports = {
       options: {
         includePaths: [path.join(__dirname, `../common/src`)],
         skipEsbuildJest: true,
+        esbuildLoaderOptions: {
+          target: "es2020",
+          loader: "tsx",
+          supported: {
+            bigint: true,
+          },
+        },
       },
     },
   ],

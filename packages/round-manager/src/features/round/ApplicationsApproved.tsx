@@ -138,9 +138,7 @@ export default function ApplicationsApproved() {
       setOpenProgressModal(true);
       setOpenConfirmationModal(false);
       await bulkUpdateGrantApplications({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         roundId: id!,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         applications: applications!,
         selectedApplications: selected.filter(
           (application) => application.status === "REJECTED"

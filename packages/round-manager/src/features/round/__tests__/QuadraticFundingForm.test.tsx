@@ -3,9 +3,9 @@ import { fireEvent, screen } from "@testing-library/react";
 import { renderWrapped } from "../../../test-utils";
 
 import { ChainId, getPayoutTokenOptions } from "../../api/utils";
-import { useWallet } from "../../common/Auth";
 import { FormStepper } from "../../common/FormStepper";
 import QuadraticFundingForm from "../QuadraticFundingForm";
+import { useChainId } from "wagmi";
 
 jest.mock("../../common/Auth");
 jest.mock("@rainbow-me/rainbowkit", () => ({
@@ -18,9 +18,7 @@ jest.mock("../../../constants", () => ({
 }));
 
 beforeEach(() => {
-  (useWallet as jest.Mock).mockReturnValue({
-    chain: { id: ChainId.GOERLI_CHAIN_ID },
-  });
+  (useChainId as jest.Mock).mockReturnValue(5);
 });
 
 describe("<QuadraticFundingForm />", () => {

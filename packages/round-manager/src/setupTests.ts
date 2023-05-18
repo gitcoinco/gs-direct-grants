@@ -9,6 +9,8 @@ global.TextEncoder = TextEncoder;
 // @ts-expect-error I love jest
 global.TextDecoder = TextDecoder;
 
+global.ResizeObserver = require("resize-observer-polyfill");
+
 beforeEach(() => {
   // @headlessui/react needs IntersectionObserver but isn't available in test environment
   const mockIntersectionObserver = jest.fn();

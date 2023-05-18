@@ -4,10 +4,10 @@ import { faker } from "@faker-js/faker";
 import { RoundDetailForm } from "../RoundDetailForm";
 import ApplicationEligibilityForm from "../ApplicationEligibilityForm";
 import { RoundApplicationForm } from "../RoundApplicationForm";
-import { useWallet } from "../../common/Auth";
 import * as FormWizardImport from "../../common/FormWizard";
 import { fireEvent, screen } from "@testing-library/react";
 import QuadraticFundingForm from "../QuadraticFundingForm";
+import { useAccount } from "wagmi";
 
 jest.mock("../../common/Navbar");
 jest.mock("../../common/Auth");
@@ -26,10 +26,8 @@ jest.mock("react-router-dom", () => ({
 
 describe("<CreateRoundPage />", () => {
   beforeEach(() => {
-    (useWallet as jest.Mock).mockReturnValue({
-      chain: {},
+    (useAccount as jest.Mock).mockReturnValue({
       address: "0x0",
-      provider: { getNetwork: () => ({ chainId: "0x0" }) },
     });
   });
 

@@ -12,7 +12,13 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { useDisconnect, useSwitchNetwork } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useDisconnect,
+  useNetwork,
+  useSwitchNetwork,
+} from "wagmi";
 import { PassportVerifier } from "@gitcoinco/passport-sdk-verifier";
 import {
   ApplicationContext,
@@ -26,7 +32,6 @@ import {
 } from "../../api/application";
 import { faker } from "@faker-js/faker";
 import { RoundContext } from "../../../context/round/RoundContext";
-import { useWallet } from "../../common/Auth";
 import {
   BulkUpdateGrantApplicationContext,
   BulkUpdateGrantApplicationState,
@@ -41,24 +46,6 @@ jest.mock("../../../constants", () => ({
   ...jest.requireActual("../../../constants"),
   errorModalDelayMs: 0, // NB: use smaller delay for faster tests
 }));
-
-const mockAddress = "0x0";
-const mockWallet = {
-  provider: {
-    network: {
-      chainId: 1,
-    },
-  },
-  address: mockAddress,
-  signer: {
-    getChainId: () => {
-      /* do nothing */
-    },
-  },
-  chain: {
-    name: "abc",
-  },
-};
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
@@ -84,7 +71,13 @@ const verifyCredentialMock = jest.spyOn(
 
 describe("ViewApplicationPage", () => {
   beforeEach(() => {
-    (useWallet as jest.Mock).mockImplementation(() => mockWallet);
+    (useNetwork as jest.Mock).mockReturnValue({
+      name: "abc",
+    });
+    (useChainId as jest.Mock).mockReturnValue(0);
+    (useAccount as jest.Mock).mockReturnValue({
+      address: "0x0",
+    });
     (useSwitchNetwork as any).mockReturnValue({ chains: [] });
     (useDisconnect as any).mockReturnValue({});
   });
@@ -107,10 +100,13 @@ describe("ViewApplicationPage", () => {
     const application = makeGrantApplicationData({ applicationIdOverride });
     (getApplicationsByRoundId as any).mockResolvedValue(application);
     const wrongAddress = faker.finance.ethereumAddress();
-    (useWallet as jest.Mock).mockImplementation(() => ({
-      ...mockWallet,
+    (useNetwork as jest.Mock).mockReturnValue({
+      name: "abc",
+    });
+    (useChainId as jest.Mock).mockReturnValue(0);
+    (useAccount as jest.Mock).mockReturnValue({
       address: wrongAddress,
-    }));
+    });
 
     renderWithContext(<ViewApplicationPage />, { applications: [application] });
     expect(screen.getByText("Access Denied!")).toBeInTheDocument();
@@ -292,7 +288,13 @@ describe("ViewApplicationPage", () => {
 
 describe("ViewApplicationPage verification badges", () => {
   beforeEach(() => {
-    (useWallet as jest.Mock).mockImplementation(() => mockWallet);
+    (useNetwork as jest.Mock).mockReturnValue({
+      name: "abc",
+    });
+    (useChainId as jest.Mock).mockReturnValue(0);
+    (useAccount as jest.Mock).mockReturnValue({
+      address: "0x0",
+    });
     (useSwitchNetwork as any).mockReturnValue({ chains: [] });
     (useDisconnect as any).mockReturnValue({});
   });
@@ -600,7 +602,7 @@ export const renderWithContext = (
               data: [
                 makeRoundData({
                   id: roundIdOverride,
-                  operatorWallets: [mockAddress],
+                  operatorWallets: ["0x0"],
                 }),
               ],
               fetchRoundStatus: ProgressStatus.IS_SUCCESS,

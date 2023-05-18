@@ -2,15 +2,14 @@ import {
   MatchingStatsData,
   MetadataPointer,
   ProgressStatus,
-  Web3Instance,
 } from "../../features/api/types";
 import React, { createContext, useContext, useReducer } from "react";
-import { useWallet } from "../../features/common/Auth";
 import { saveToIPFS } from "../../features/api/ipfs";
 import { datadogLogs } from "@datadog/browser-logs";
-import { ethers } from "ethers";
 import { generateMerkleTree } from "../../features/api/utils";
 import { updateDistributionToContract } from "../../features/api/payoutStrategy/merklePayoutStrategy";
+import { encodeAbiParameters, parseAbiParameters, toHex } from "viem";
+import { useWalletClient, WalletClient } from "wagmi";
 
 export interface FinalizeRoundState {
   IPFSCurrentStatus: ProgressStatus;
@@ -21,7 +20,7 @@ interface _finalizeRoundParams {
   dispatch: Dispatch;
   payoutStrategy: string;
   matchingJSON: MatchingStatsData[] | undefined;
-  signerOrProvider: Web3Instance["provider"];
+  walletClient: WalletClient;
 }
 
 type Action =
@@ -108,7 +107,7 @@ const _finalizeRound = async ({
   dispatch,
   payoutStrategy,
   matchingJSON,
-  signerOrProvider,
+  walletClient,
 }: _finalizeRoundParams) => {
   dispatch({
     type: ActionType.RESET_TO_INITIAL_STATE,
@@ -132,7 +131,7 @@ const _finalizeRound = async ({
       payoutStrategy,
       merkleRoot,
       distributionMetaPtr,
-      signerOrProvider
+      walletClient
     );
     console.log("transactionBlockNumber: ", transactionBlockNumber);
   } catch (error) {
@@ -149,7 +148,10 @@ export const useFinalizeRound = () => {
     );
   }
 
-  const { signer: walletSigner } = useWallet();
+  const { data: walletClient } = useWalletClient();
+  if (!walletClient) {
+    throw new Error("Wallet is not initialized");
+  }
 
   const finalizeRound = (
     payoutStrategy: string,
@@ -159,8 +161,7 @@ export const useFinalizeRound = () => {
       dispatch: context.dispatch,
       payoutStrategy,
       matchingJSON,
-      // @ts-expect-error TODO: resolve this situation around signers and providers
-      signerOrProvider: walletSigner,
+      walletClient,
     });
   };
 
@@ -212,7 +213,7 @@ async function finalizeToContract(
   payoutStrategy: string,
   merkleRoot: string,
   distributionMetaPtr: { protocol: number; pointer: string },
-  signerOrProvider: Web3Instance["provider"]
+  walletClient: WalletClient
 ) {
   try {
     dispatch({
@@ -228,8 +229,7 @@ async function finalizeToContract(
     const { transactionBlockNumber } = await updateDistributionToContract({
       payoutStrategy,
       encodedDistribution,
-      // @ts-expect-error TODO: resolve this situation around signers and providers
-      signerOrProvider: signerOrProvider,
+      walletClient: walletClient,
     });
 
     dispatch({
@@ -254,8 +254,13 @@ function encodeDistributionParameters(
   merkleRoot: string,
   distributionMetaPtr: MetadataPointer
 ) {
-  return ethers.utils.defaultAbiCoder.encode(
-    ["bytes32", "tuple(uint256 protocol, string pointer)"],
-    [merkleRoot, distributionMetaPtr]
+  const bigintDistributionMetaPtr = {
+    ...distributionMetaPtr,
+    protocol: BigInt(distributionMetaPtr.protocol),
+  };
+
+  return encodeAbiParameters(
+    parseAbiParameters("bytes32 merkleRoot, (uint256 protocol,string pointer)"),
+    [toHex(merkleRoot), bigintDistributionMetaPtr]
   );
 }

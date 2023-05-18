@@ -1,6 +1,5 @@
 import ViewProgram from "../ViewProgramPage";
 import { render, screen } from "@testing-library/react";
-import { useWallet } from "../../common/Auth";
 import {
   makeProgramData,
   makeRoundData,
@@ -10,9 +9,10 @@ import {
 import { faker } from "@faker-js/faker";
 import { Program, ProgressStatus } from "../../api/types";
 import { formatUTCDateAsISOString } from "common";
+import { useAccount } from "wagmi";
+import { useParams } from "react-router-dom";
 
 const programId = faker.datatype.number().toString();
-const useParamsFn = () => ({ id: programId });
 
 jest.mock("../../common/Navbar");
 jest.mock("../../common/Auth");
@@ -22,7 +22,7 @@ jest.mock("@rainbow-me/rainbowkit", () => ({
 }));
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useParams: useParamsFn,
+  useParams: jest.fn(),
 }));
 
 describe("<ViewProgram />", () => {
@@ -30,13 +30,14 @@ describe("<ViewProgram />", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (useParams as jest.Mock).mockReturnValue({
+      id: programId,
+    });
 
     stubProgram = makeProgramData({ id: programId });
 
-    (useWallet as jest.Mock).mockReturnValue({
-      chain: {},
+    (useAccount as jest.Mock).mockReturnValue({
       address: stubProgram.operatorWallets[0],
-      provider: { getNetwork: () => ({ chainId: "0x0" }) },
     });
   });
 
@@ -52,10 +53,8 @@ describe("<ViewProgram />", () => {
   });
 
   it("should display access denied when wallet accessing is not program operator", () => {
-    (useWallet as jest.Mock).mockReturnValue({
-      chain: {},
+    (useAccount as jest.Mock).mockReturnValue({
       address: faker.finance.ethereumAddress(),
-      provider: { getNetwork: () => ({ chainId: "0x0" }) },
     });
 
     render(
@@ -98,10 +97,8 @@ describe("<ViewProgram />", () => {
     ];
 
     const stubProgram = makeProgramData({ id: programId, operatorWallets });
-    (useWallet as jest.Mock).mockReturnValue({
-      chain: {},
+    (useAccount as jest.Mock).mockReturnValue({
       address: stubProgram.operatorWallets[0],
-      provider: { getNetwork: () => ({ chainId: "0x0" }) },
     });
 
     render(

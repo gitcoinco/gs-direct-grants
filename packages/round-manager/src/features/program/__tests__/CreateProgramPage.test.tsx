@@ -1,6 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import CreateProgramPage from "../CreateProgramPage";
-import { useWallet } from "../../common/Auth";
 import { ProgressStatus } from "../../api/types";
 import { saveToIPFS } from "../../api/ipfs";
 import {
@@ -9,10 +8,12 @@ import {
   initialCreateProgramState,
 } from "../../../context/program/CreateProgramContext";
 import { MemoryRouter } from "react-router-dom";
+import { WagmiConfig } from "wagmi";
+import { client } from "../../../app/wagmi";
 
 jest.mock("../../api/ipfs");
-jest.mock("../../common/Auth");
 jest.mock("@rainbow-me/rainbowkit", () => ({
+  ...jest.requireActual("@rainbow-me/rainbowkit"),
   ConnectButton: jest.fn(),
 }));
 
@@ -25,7 +26,6 @@ describe("<CreateProgramPage />", () => {
   let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    (useWallet as jest.Mock).mockReturnValue({ chain: {} });
     (saveToIPFS as jest.Mock).mockImplementation(() => {
       /* do nothing */
     });
@@ -118,13 +118,15 @@ export const renderWithContext = (
 ) =>
   render(
     <MemoryRouter>
-      <CreateProgramContext.Provider
-        value={{
-          state: { ...initialCreateProgramState, ...programStateOverrides },
-          dispatch,
-        }}
-      >
-        {ui}
-      </CreateProgramContext.Provider>
+      <WagmiConfig config={client}>
+        <CreateProgramContext.Provider
+          value={{
+            state: { ...initialCreateProgramState, ...programStateOverrides },
+            dispatch,
+          }}
+        >
+          {ui}
+        </CreateProgramContext.Provider>
+      </WagmiConfig>
     </MemoryRouter>
   );

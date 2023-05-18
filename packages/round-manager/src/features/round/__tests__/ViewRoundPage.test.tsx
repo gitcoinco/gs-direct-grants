@@ -18,6 +18,7 @@ jest.mock("../../common/Auth");
 jest.mock("wagmi");
 
 jest.mock("@rainbow-me/rainbowkit", () => ({
+  ...jest.requireActual("@rainbow-me/rainbowkit"),
   ConnectButton: jest.fn(),
 }));
 

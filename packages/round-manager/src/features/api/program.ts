@@ -1,24 +1,34 @@
 import { CHAINS, fetchFromIPFS } from "./utils";
-import { MetadataPointer, Program, Web3Instance } from "./types";
+import { MetadataPointer, Program } from "./types";
 import { programFactoryContract } from "./contracts";
-import { ethers } from "ethers";
 import { datadogLogs } from "@datadog/browser-logs";
-import { Signer } from "@ethersproject/abstract-signer";
 import { graphql_fetch } from "common";
+import {
+  decodeEventLog,
+  encodeAbiParameters,
+  getContract,
+  Hex,
+  parseAbiParameters,
+  PublicClient,
+} from "viem";
+import { WalletClient } from "wagmi";
+import { getTransactionReceipt } from "viem/dist/types/actions/public/getTransactionReceipt";
+import { waitForTransaction } from "@wagmi/core";
+import ProgramFactoryABI from "./abi/ProgramFactoryABI";
 
 /**
  * Fetch a list of programs
  * @param address - a valid program operator
- * @param signerOrProvider - provider
+ * @param publicClient - provider
  *
  */
 export async function listPrograms(
   address: string,
-  signerOrProvider: Web3Instance["provider"]
+  publicClient: PublicClient
 ): Promise<Program[]> {
   try {
     // fetch chain id
-    const { chainId } = await signerOrProvider.getNetwork();
+    const chainId = await publicClient.getChainId();
 
     // get the subgraph for all programs owned by the given address
     const res = await graphql_fetch(
@@ -75,14 +85,13 @@ export async function listPrograms(
   }
 }
 
-// TODO(shavinac) change params to expect chainId instead of signerOrProvider
 export async function getProgramById(
   programId: string,
-  signerOrProvider: Web3Instance["provider"]
+  publicClient: PublicClient
 ): Promise<Program> {
   try {
     // fetch chain id
-    const { chainId } = await signerOrProvider.getNetwork();
+    const chainId = await publicClient.getChainId();
 
     // get the subgraph for program by $programId
     const res = await graphql_fetch(
@@ -137,42 +146,41 @@ interface DeployProgramContractProps {
     store: MetadataPointer;
     operatorWallets: string[];
   };
-  signerOrProvider: Signer;
+  walletClient: WalletClient;
 }
 
 export async function deployProgramContract({
   program: { store: metadata, operatorWallets },
-  signerOrProvider,
+  walletClient,
 }: DeployProgramContractProps) {
   try {
-    const chainId = await signerOrProvider.getChainId();
+    const chainId = await walletClient.getChainId();
     const _programFactoryContract = programFactoryContract(chainId);
-    const programFactory = new ethers.Contract(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      _programFactoryContract.address!,
-      _programFactoryContract.abi,
-      signerOrProvider
-    );
+    const programFactory = await getContract({
+      address: _programFactoryContract.address as Hex,
+      abi: ProgramFactoryABI,
+      walletClient,
+    });
 
     operatorWallets = operatorWallets.filter((e) => e !== "");
 
     const encodedParameters = encodeInputParameters(metadata, operatorWallets);
 
-    // Deploy a new Program contract
-    const tx = await programFactory.create(encodedParameters);
-    const receipt = await tx.wait();
+    const tx = await programFactory.write.create([encodedParameters]);
+    const receipt = await waitForTransaction({
+      hash: tx,
+    });
     let programAddress;
 
-    if (receipt.events) {
-      const event = receipt.events.find(
-        (e: { event: string }) => e.event === "ProgramCreated"
-      );
-      if (event && event.args) {
-        programAddress = event.args.programContractAddress; // program contract address from the event
-      }
-    }
+    receipt.logs
+      .map((log) => decodeEventLog({ ...log, abi: ProgramFactoryABI }))
+      .find((log) => {
+        if (log.eventName === "ProgramCreated") {
+          programAddress = log.args.programContractAddress;
+        }
+      });
 
-    console.log("✅ Transaction hash: ", tx.hash);
+    console.log("✅ Transaction hash: ", tx);
     console.log("✅ Program address: ", programAddress);
     const blockNumber = receipt.blockNumber;
     return {
@@ -189,8 +197,19 @@ function encodeInputParameters(
   metadata: MetadataPointer,
   operatorWallets: string[]
 ) {
-  return ethers.utils.defaultAbiCoder.encode(
-    ["tuple(uint256 protocol, string pointer)", "address[]", "address[]"],
-    [metadata, operatorWallets.slice(0, 1), operatorWallets]
+  const bigintMetadataPointer = {
+    pointer: metadata.pointer,
+    protocol: BigInt(metadata.protocol),
+  };
+
+  return encodeAbiParameters(
+    parseAbiParameters([
+      "(uint256 protocol, string pointer),address[],address[]",
+    ]),
+    [
+      bigintMetadataPointer,
+      operatorWallets.slice(0, 1) as Hex[],
+      operatorWallets as Hex[],
+    ]
   );
 }

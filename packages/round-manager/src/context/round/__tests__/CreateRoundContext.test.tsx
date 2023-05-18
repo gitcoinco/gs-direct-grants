@@ -10,26 +10,17 @@ import { deployRoundContract } from "../../../features/api/round";
 import { waitForSubgraphSyncTo } from "../../../features/api/subgraph";
 import { deployMerklePayoutStrategyContract } from "../../../features/api/payoutStrategy/merklePayoutStrategy";
 import { deployQFVotingContract } from "../../../features/api/votingStrategy/qfVotingStrategy";
-
-const mockWallet = {
-  address: "0x0",
-  signer: {
-    getChainId: () => {
-      /* do nothing.*/
-    },
-  },
-};
+import { WagmiConfig } from "wagmi";
+import { client } from "../../../app/wagmi";
 
 jest.mock("../../../features/api/votingStrategy/qfVotingStrategy");
 jest.mock("../../../features/api/payoutStrategy/merklePayoutStrategy");
 jest.mock("../../../features/api/round");
 jest.mock("../../../features/api/ipfs");
 jest.mock("../../../features/api/subgraph");
-jest.mock("../../../features/common/Auth", () => ({
-  useWallet: () => mockWallet,
-}));
-jest.mock("wagmi");
+
 jest.mock("@rainbow-me/rainbowkit", () => ({
+  ...jest.requireActual("@rainbow-me/rainbowkit"),
   ConnectButton: jest.fn(),
 }));
 
@@ -501,5 +492,9 @@ const TestUseCreateRoundComponent = () => {
 };
 
 function renderWithProvider(ui: JSX.Element) {
-  render(<CreateRoundProvider>{ui}</CreateRoundProvider>);
+  render(
+    <WagmiConfig config={client}>
+      <CreateRoundProvider>{ui}</CreateRoundProvider>
+    </WagmiConfig>
+  );
 }
