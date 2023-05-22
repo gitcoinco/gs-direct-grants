@@ -38,6 +38,15 @@ jest.mock("react-router-dom", () => ({
 }));
 const roundIdOverride = "some-round-id";
 
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
+    },
+  }),
+}));
+
 const grantApplications = [
   makeGrantApplicationData({ roundIdOverride }),
   makeGrantApplicationData({ roundIdOverride }),
