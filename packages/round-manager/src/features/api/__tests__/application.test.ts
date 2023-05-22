@@ -20,6 +20,13 @@ jest.mock("viem", () => ({
   getContract: jest.fn(),
 }));
 
+jest.mock("../../../app/wagmi", () => ({
+  ...jest.requireActual("../../../app/wagmi"),
+  publicClient: () => ({
+    getChainId: () => 5,
+  }),
+}));
+
 describe("getApplicationById", () => {
   let expectedApplication: GrantApplication;
 

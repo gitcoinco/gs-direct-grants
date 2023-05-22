@@ -14,16 +14,14 @@ import {
 } from "./contracts";
 import { graphql_fetch } from "common";
 import {
-  createPublicClient,
   getAddress,
   getContract,
   Hex,
-  http,
   PublicClient,
   TransactionReceipt,
   zeroAddress,
 } from "viem";
-import { mainnet, WalletClient } from "wagmi";
+import { WalletClient } from "wagmi";
 import { publicClient } from "../../app/wagmi";
 
 type RoundApplication = {

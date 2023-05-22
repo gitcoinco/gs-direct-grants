@@ -30,18 +30,6 @@ import { WagmiConfig } from "wagmi";
 import { client } from "../../../app/wagmi";
 
 jest.mock("../../api/application");
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {},
-    address: "0x0",
-    signer: {
-      getChainId: () => {
-        /* do nothing */
-      },
-    },
-    provider: { getNetwork: () => ({ chainId: "0" }) },
-  }),
-}));
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
