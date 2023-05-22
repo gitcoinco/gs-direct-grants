@@ -191,10 +191,12 @@ describe("View Fund Grantees", () => {
           wrapWithApplicationContext(
             wrapWithReadProgramContext(
               wrapWithRoundContext(
-                <ViewFundGrantees
-                  isRoundFinalized={true}
-                  round={makeRoundData()}
-                />,
+                <WagmiConfig config={client}>
+                  <ViewFundGrantees
+                    isRoundFinalized={true}
+                    round={makeRoundData()}
+                  />
+                </WagmiConfig>,
                 {
                   data: undefined,
                   fetchRoundStatus: ProgressStatus.IS_SUCCESS,
@@ -223,10 +225,12 @@ describe("View Fund Grantees", () => {
             wrapWithApplicationContext(
               wrapWithReadProgramContext(
                 wrapWithRoundContext(
-                  <ViewFundGrantees
-                    isRoundFinalized={true}
-                    round={makeRoundData()}
-                  />,
+                  <WagmiConfig config={client}>
+                    <ViewFundGrantees
+                      isRoundFinalized={true}
+                      round={makeRoundData()}
+                    />
+                  </WagmiConfig>,
                   {
                     data: undefined,
                     fetchRoundStatus: ProgressStatus.IS_SUCCESS,

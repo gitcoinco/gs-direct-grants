@@ -4,6 +4,7 @@
 // learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom/extend-expect";
 import { TextEncoder, TextDecoder } from "util";
+import "whatwg-fetch";
 
 global.TextEncoder = TextEncoder;
 // @ts-expect-error I love jest

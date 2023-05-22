@@ -41,9 +41,8 @@ import {
   getContract,
   Hex,
 } from "viem";
-import { abi } from "../../api/abi/RoundImplementationABI";
 import merklePayoutStrategyImplementationABI from "../../api/abi/payoutStrategy/MerklePayoutStrategyImplementationABI";
-
+import RoundImplementationABI from "../../api/abi/RoundImplementationABI";
 type RevisedMatch = {
   revisedContributionCount: number;
   revisedMatch: bigint;
@@ -81,7 +80,7 @@ async function fetchFinalizedMatches(
 ): Promise<FinalizedMatches | undefined> {
   const roundImplementation = getContract({
     address: roundId as Hex,
-    abi: abi,
+    abi: RoundImplementationABI,
     publicClient,
   });
 

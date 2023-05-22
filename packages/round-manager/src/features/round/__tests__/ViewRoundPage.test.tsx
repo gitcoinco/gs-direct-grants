@@ -14,9 +14,10 @@ import {
 import { GrantApplication, ProgressStatus, Round } from "../../api/types";
 import ViewRoundPage from "../ViewRoundPage";
 
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ...jest.requireActual("@rainbow-me/rainbowkit"),
-  ConnectButton: jest.fn(),
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useSwitchNetwork: jest.fn(),
+  useDisconnect: jest.fn(),
 }));
 
 Object.assign(navigator, {

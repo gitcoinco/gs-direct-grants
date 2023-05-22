@@ -12,25 +12,7 @@ import {
 } from "../UpdateRoundContext";
 import { TransactionBuilder } from "../../../features/api/round";
 import { makeRoundData } from "../../../test-utils";
-import {
-  TransactionReceipt,
-  TransactionResponse,
-} from "@ethersproject/providers";
 import { waitForSubgraphSyncTo } from "../../../features/api/subgraph";
-
-const mockWallet = {
-  address: "0x0",
-  signer: {
-    getChainId: () => {
-      return 1;
-    },
-  },
-};
-
-jest.mock("../../../features/common/Auth", () => ({
-  useWallet: () => mockWallet,
-}));
-jest.mock("wagmi");
 
 jest.mock("../../../features/api/round");
 jest.mock("../../../features/api/ipfs");
@@ -46,7 +28,7 @@ const executeSpy = (execute: boolean) => {
       .mockImplementation(function () {
         return new Promise(() => {
           /* do nothing. */
-        }) as unknown as Promise<TransactionResponse>;
+        });
       });
 
   if (execute)

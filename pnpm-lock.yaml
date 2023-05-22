@@ -590,6 +590,7 @@ importers:
       viem: ^0.3.33
       wagmi: 1.0.5
       web-vitals: ^2.1.0
+      whatwg-fetch: ^3.6.2
       yup: ^0.32.11
     dependencies:
       '@babel/core': 7.21.8
@@ -675,6 +676,7 @@ importers:
       tailwind-styled-components: 2.2.0_biqbaboplfbrettd7655fr4n2y
       tailwindcss: 3.3.2
       ts-jest: 29.1.0_dywjbwoysgpe5pkqw6owlxitka
+      whatwg-fetch: 3.6.2
 
 packages:
 

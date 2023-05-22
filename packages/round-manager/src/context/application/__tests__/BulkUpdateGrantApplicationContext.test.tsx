@@ -11,19 +11,10 @@ import {
   BulkUpdateGrantApplicationProvider,
   useBulkUpdateGrantApplications,
 } from "../BulkUpdateGrantApplicationContext";
+import { WagmiConfig } from "wagmi";
+import { client } from "../../../app/wagmi";
 jest.mock("../../../features/api/application");
 jest.mock("../../../features/api/subgraph");
-jest.mock("../../../features/common/Auth", () => ({
-  useWallet: () => mockWallet,
-}));
-const mockWallet = {
-  address: "0x0",
-  signer: {
-    getChainId: () => {
-      /* do nothing.*/
-    },
-  },
-};
 
 jest.setTimeout(35000);
 
@@ -281,11 +272,12 @@ const TestUseBulkUpdateGrantApplicationComponent = () => {
 
 function renderWithProvider(ui: JSX.Element) {
   render(
-    <BulkUpdateGrantApplicationProvider>
-      {ui}
-    </BulkUpdateGrantApplicationProvider>
+    <WagmiConfig config={client}>
+      <BulkUpdateGrantApplicationProvider>
+        {ui}
+      </BulkUpdateGrantApplicationProvider>
+    </WagmiConfig>
   );
 }
 
-export { };
-
+export {};

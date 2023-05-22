@@ -9,10 +9,17 @@ import {
   wrapWithReadProgramContext,
   wrapWithRoundContext,
 } from "../../../test-utils";
-import { useAccount, useBalance, useDisconnect, useSwitchNetwork } from "wagmi";
+import {
+  useAccount,
+  useBalance,
+  useDisconnect,
+  useSwitchNetwork,
+  WagmiConfig,
+} from "wagmi";
 import { useParams } from "react-router-dom";
 import { faker } from "@faker-js/faker";
 import { useTokenPrice } from "common";
+import { client } from "../../../app/wagmi";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { TextDecoder } = require("util");
@@ -77,10 +84,15 @@ describe("fund contract tab", () => {
       wrapWithBulkUpdateGrantApplicationContext(
         wrapWithApplicationContext(
           wrapWithReadProgramContext(
-            wrapWithRoundContext(<ViewRoundPage />, {
-              data: [mockRoundData],
-              fetchRoundStatus: ProgressStatus.IS_SUCCESS,
-            }),
+            wrapWithRoundContext(
+              <WagmiConfig config={client}>
+                <ViewRoundPage />
+              </WagmiConfig>,
+              {
+                data: [mockRoundData],
+                fetchRoundStatus: ProgressStatus.IS_SUCCESS,
+              }
+            ),
             { programs: [] }
           ),
           {

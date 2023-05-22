@@ -61,7 +61,9 @@ describe("TransactionBuilder", () => {
   });
 
   it("should return the transactions", () => {
-    const transactions = Array(3).fill(toHex(Math.random(), { size: 32 }));
+    const transactions = Array(3).fill(
+      toHex("190238908590128097", { size: 32 })
+    );
     transactionBuilder.transactions = transactions;
 
     const result = transactionBuilder.getTransactions();
