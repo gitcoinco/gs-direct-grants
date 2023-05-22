@@ -3,7 +3,6 @@ import { Program } from "../types";
 import { makeProgramData } from "../../../test-utils";
 import { fetchFromIPFS, ChainId, CHAINS } from "../utils";
 import { graphql_fetch } from "common";
-import { publicClient } from "../../../app/wagmi";
 
 jest.mock("../utils", () => ({
   ...jest.requireActual("../utils"),
