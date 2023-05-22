@@ -24,6 +24,15 @@ jest.mock("@rainbow-me/rainbowkit", () => ({
   ConnectButton: jest.fn(),
 }));
 
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
+    },
+  }),
+}));
+
 describe("<CreateRoundProvider />", () => {
   function invokeCreateRound() {
     const createRound = screen.getByTestId("create-round");
