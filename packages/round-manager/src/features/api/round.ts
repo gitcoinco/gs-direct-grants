@@ -25,7 +25,6 @@ import {
 } from "viem";
 import { WalletClient } from "wagmi";
 import { waitForTransaction } from "@wagmi/core";
-import ProgramFactoryABI from "./abi/ProgramFactoryABI";
 import RoundFactoryABI from "./abi/RoundFactoryABI";
 
 export enum UpdateAction {

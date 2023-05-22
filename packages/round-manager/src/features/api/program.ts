@@ -12,7 +12,6 @@ import {
   PublicClient,
 } from "viem";
 import { WalletClient } from "wagmi";
-import { getTransactionReceipt } from "viem/dist/types/actions/public/getTransactionReceipt";
 import { waitForTransaction } from "@wagmi/core";
 import ProgramFactoryABI from "./abi/ProgramFactoryABI";
 

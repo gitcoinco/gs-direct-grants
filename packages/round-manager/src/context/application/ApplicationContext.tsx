@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useReducer } from "react";
 import { GrantApplication } from "../../features/api/types";
-
 import {
   getApplicationById,
   getApplicationsByRoundId,
