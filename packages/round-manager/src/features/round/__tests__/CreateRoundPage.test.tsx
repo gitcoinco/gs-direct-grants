@@ -14,14 +14,9 @@ jest.mock("../../common/Auth");
 const formWizardSpy = jest.spyOn(FormWizardImport, "FormWizard");
 
 const programId = faker.finance.ethereumAddress();
-const useParamsFn = () => [
-  {
-    get: () => programId,
-  },
-];
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useSearchParams: useParamsFn,
+  useSearchParams: jest.fn(),
 }));
 
 describe("<CreateRoundPage />", () => {

@@ -24,6 +24,7 @@ import {
   zeroAddress,
 } from "viem";
 import { mainnet, WalletClient } from "wagmi";
+import { publicClient } from "../../app/wagmi";
 
 type RoundApplication = {
   id: string;
@@ -425,11 +426,6 @@ export const updateApplicationList = async (
   return resp.IpfsHash;
 };
 
-const publicClient = createPublicClient({
-  chain: mainnet,
-  transport: http(),
-});
-
 export const fundRoundContract = async (
   roundId: string,
   walletClient: WalletClient,
@@ -447,7 +443,9 @@ export const fundRoundContract = async (
     };
 
     txHash = await walletClient.sendTransaction(txObj);
-    receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    receipt = await publicClient({}).waitForTransactionReceipt({
+      hash: txHash,
+    });
   } else {
     const tokenContract = getContract({
       address: payoutToken.address,
@@ -456,7 +454,9 @@ export const fundRoundContract = async (
     });
 
     txHash = await tokenContract.write.transfer([roundId, amount]);
-    receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    receipt = await publicClient({}).waitForTransactionReceipt({
+      hash: txHash,
+    });
   }
 
   return {
