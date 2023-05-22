@@ -15,7 +15,7 @@ module.exports = {
   // @rainbow-me/rainbowkit is already an ESM module and
   // it trips Jest when it tries to transform it, this ignores it
   transformIgnorePatterns: [
-    `/round-manager/node_modules/(?!(${esmModules.join("|")}))`,
+    `/node_modules/.pnpm\/(?!(${esmModules.join("|")}))`,
   ],
   moduleNameMapper: {
     "^.+.(css|styl|less|sass|scss|png|jpg|svg|ttf|woff|woff2)$":
