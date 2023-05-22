@@ -16,6 +16,15 @@ import { client } from "../../../app/wagmi";
 jest.mock("../../../features/api/application");
 jest.mock("../../../features/api/subgraph");
 
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
+    },
+  }),
+}));
+
 jest.setTimeout(35000);
 
 // temp fix for prod merge

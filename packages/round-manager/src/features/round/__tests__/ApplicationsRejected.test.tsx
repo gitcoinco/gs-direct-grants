@@ -37,16 +37,12 @@ jest.mock("react-router-dom", () => ({
 }));
 const roundIdOverride = "some-round-id";
 
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {},
-    address: "0x0",
-    signer: {
-      getChainId: () => {
-        /* do nothing */
-      },
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
     },
-    provider: { getNetwork: () => ({ chainId: "0" }) },
   }),
 }));
 

@@ -10,11 +10,12 @@ const esModules = [
 module.exports = {
   preset: "ts-jest/presets/js-with-ts",
   testEnvironment: "jsdom",
-  // extensionsToTreatAsEsm: [".ts"],
-  transformIgnorePatterns: [`/node_modules/.pnpm/(?!(${esModules.join("|")}))`],
   moduleNameMapper: {
-    "^.+.(css|styl|less|sass|scss|png|jpg|svg|ttf|woff|woff2)$":
+    "^.+.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$":
       "jest-transform-stub",
+    "^.+.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$":
+      "<rootDir>/src/tests/fileTransform.ts",
   },
+  transformIgnorePatterns: [`/node_modules/.pnpm/(?!(${esModules.join("|")}))`],
   setupFilesAfterEnv: ["./src/setupTests.ts"],
 };

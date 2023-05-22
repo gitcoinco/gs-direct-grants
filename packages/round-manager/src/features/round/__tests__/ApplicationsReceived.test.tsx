@@ -63,6 +63,15 @@ function setupInBulkSelectionMode() {
   fireEvent.click(selectButton);
 }
 
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
+    },
+  }),
+}));
+
 describe("<ApplicationsReceived />", () => {
   beforeEach(() => {
     (getApplicationsByRoundId as jest.Mock).mockResolvedValue(
