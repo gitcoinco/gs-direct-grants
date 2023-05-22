@@ -15,12 +15,18 @@ import { useParams } from "react-router-dom";
 const programId = faker.datatype.number().toString();
 
 jest.mock("../../common/Navbar");
-jest.mock("../../common/Auth");
 jest.mock("../../api/program");
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useParams: jest.fn(),
+}));
+
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useNetwork: jest.fn(),
+  useChainId: jest.fn(),
+  useAccount: jest.fn(),
 }));
 
 describe("<ViewProgram />", () => {

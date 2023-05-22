@@ -8,6 +8,8 @@ import {
   FinalizeRoundProvider,
   useFinalizeRound,
 } from "../FinalizeRoundContext";
+import { client } from "../../../app/wagmi";
+import { WagmiConfig } from "wagmi";
 
 jest.mock("../../../features/api/payoutStrategy/merklePayoutStrategy");
 jest.mock("../../../features/api/round");
@@ -169,5 +171,9 @@ const TestUseFinalizeRoundComponent = () => {
 };
 
 function renderWithProvider(ui: JSX.Element) {
-  render(<FinalizeRoundProvider>{ui}</FinalizeRoundProvider>);
+  render(
+    <WagmiConfig config={client}>
+      <FinalizeRoundProvider>{ui}</FinalizeRoundProvider>
+    </WagmiConfig>
+  );
 }

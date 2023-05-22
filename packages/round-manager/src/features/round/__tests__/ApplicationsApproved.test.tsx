@@ -25,6 +25,8 @@ import {
   updateApplicationStatuses,
 } from "../../api/application";
 import { ProgressStatus } from "../../api/types";
+import { client } from "../../../app/wagmi";
+import { WagmiConfig } from "wagmi";
 
 jest.mock("../../api/application");
 jest.mock("../../api/subgraph");
@@ -35,18 +37,6 @@ jest.mock("react-router-dom", () => ({
   }),
 }));
 const roundIdOverride = "some-round-id";
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {},
-    address: "0x0",
-    signer: {
-      getChainId: () => {
-        /* do nothing */
-      },
-    },
-    provider: { getNetwork: () => ({ chainId: "0" }) },
-  }),
-}));
 
 const grantApplications = [
   makeGrantApplicationData({ roundIdOverride }),
@@ -439,23 +429,25 @@ export const renderWithContext = (
 ) =>
   render(
     <MemoryRouter>
-      <BulkUpdateGrantApplicationContext.Provider
-        value={{
-          ...initialBulkUpdateGrantApplicationState,
-          ...bulkUpdateApplicationStateOverrides,
-        }}
-      >
-        <ApplicationContext.Provider
+      <WagmiConfig config={client}>
+        <BulkUpdateGrantApplicationContext.Provider
           value={{
-            state: {
-              ...initialApplicationState,
-              ...grantApplicationStateOverrides,
-            },
-            dispatch,
+            ...initialBulkUpdateGrantApplicationState,
+            ...bulkUpdateApplicationStateOverrides,
           }}
         >
-          {ui}
-        </ApplicationContext.Provider>
-      </BulkUpdateGrantApplicationContext.Provider>
+          <ApplicationContext.Provider
+            value={{
+              state: {
+                ...initialApplicationState,
+                ...grantApplicationStateOverrides,
+              },
+              dispatch,
+            }}
+          >
+            {ui}
+          </ApplicationContext.Provider>
+        </BulkUpdateGrantApplicationContext.Provider>
+      </WagmiConfig>
     </MemoryRouter>
   );

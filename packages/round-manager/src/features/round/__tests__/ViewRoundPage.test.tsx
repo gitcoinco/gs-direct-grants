@@ -14,8 +14,6 @@ import {
 import { GrantApplication, ProgressStatus, Round } from "../../api/types";
 import ViewRoundPage from "../ViewRoundPage";
 
-jest.mock("../../common/Auth");
-
 jest.mock("@rainbow-me/rainbowkit", () => ({
   ...jest.requireActual("@rainbow-me/rainbowkit"),
   ConnectButton: jest.fn(),

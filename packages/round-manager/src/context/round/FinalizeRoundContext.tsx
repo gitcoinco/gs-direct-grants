@@ -142,13 +142,13 @@ const _finalizeRound = async ({
 
 export const useFinalizeRound = () => {
   const context = useContext(FinalizeRoundContext);
+  const { data: walletClient } = useWalletClient();
   if (context === undefined) {
     throw new Error(
       "useFinalizeRound must be used within a FinalizeRoundProvider"
     );
   }
 
-  const { data: walletClient } = useWalletClient();
   if (!walletClient) {
     throw new Error("Wallet is not initialized");
   }

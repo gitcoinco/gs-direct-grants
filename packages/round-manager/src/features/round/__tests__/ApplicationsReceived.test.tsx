@@ -26,6 +26,8 @@ import {
 } from "../../api/application";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { ApplicationStatus, ProgressStatus } from "../../api/types";
+import { WagmiConfig } from "wagmi";
+import { client } from "../../../app/wagmi";
 
 jest.mock("../../api/application");
 jest.mock("../../common/Auth", () => ({
@@ -467,23 +469,25 @@ export const renderWithContext = (
 ) =>
   render(
     <MemoryRouter>
-      <BulkUpdateGrantApplicationContext.Provider
-        value={{
-          ...initialBulkUpdateGrantApplicationState,
-          ...bulkUpdateGrantApplicationStateOverrides,
-        }}
-      >
-        <ApplicationContext.Provider
+      <WagmiConfig config={client}>
+        <BulkUpdateGrantApplicationContext.Provider
           value={{
-            state: {
-              ...initialApplicationState,
-              ...grantApplicationStateOverrides,
-            },
-            dispatch,
+            ...initialBulkUpdateGrantApplicationState,
+            ...bulkUpdateGrantApplicationStateOverrides,
           }}
         >
-          {ui}
-        </ApplicationContext.Provider>
-      </BulkUpdateGrantApplicationContext.Provider>
+          <ApplicationContext.Provider
+            value={{
+              state: {
+                ...initialApplicationState,
+                ...grantApplicationStateOverrides,
+              },
+              dispatch,
+            }}
+          >
+            {ui}
+          </ApplicationContext.Provider>
+        </BulkUpdateGrantApplicationContext.Provider>
+      </WagmiConfig>
     </MemoryRouter>
   );

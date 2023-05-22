@@ -3,7 +3,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import { useParams } from "react-router-dom";
-import { useBalance, useDisconnect, useSwitchNetwork } from "wagmi";
+import {
+  useBalance,
+  useDisconnect,
+  useSwitchNetwork,
+  WagmiConfig,
+} from "wagmi";
 import {
   makeRoundData,
   wrapWithApplicationContext,
@@ -16,6 +21,7 @@ import * as roundTs from "../../api/round";
 import { MatchingStatsData, ProgressStatus, Round } from "../../api/types";
 import ViewFundGrantees from "../ViewFundGrantees";
 import { parseEther } from "viem";
+import { client } from "../../../app/wagmi";
 
 jest.mock("wagmi", () => ({
   ...jest.requireActual("wagmi"),
@@ -353,10 +359,12 @@ describe("View Fund Grantees", () => {
             wrapWithApplicationContext(
               wrapWithReadProgramContext(
                 wrapWithRoundContext(
-                  <ViewFundGrantees
-                    isRoundFinalized={true}
-                    round={makeRoundData()}
-                  />,
+                  <WagmiConfig config={client}>
+                    <ViewFundGrantees
+                      isRoundFinalized={true}
+                      round={makeRoundData()}
+                    />
+                  </WagmiConfig>,
                   {
                     data: undefined,
                     fetchRoundStatus: ProgressStatus.IS_SUCCESS,

@@ -8,6 +8,7 @@ import * as FormWizardImport from "../../common/FormWizard";
 import { fireEvent, screen } from "@testing-library/react";
 import QuadraticFundingForm from "../QuadraticFundingForm";
 import { useAccount } from "wagmi";
+import { useSearchParams } from "react-router-dom";
 
 jest.mock("../../common/Navbar");
 const formWizardSpy = jest.spyOn(FormWizardImport, "FormWizard");
@@ -28,6 +29,12 @@ describe("<CreateRoundPage />", () => {
     (useAccount as jest.Mock).mockReturnValue({
       address: "0x0",
     });
+
+    (useSearchParams as jest.Mock).mockReturnValue([
+      {
+        get: () => programId,
+      },
+    ]);
   });
 
   it("sends program to form wizard", () => {

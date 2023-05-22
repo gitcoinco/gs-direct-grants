@@ -8,7 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { useParams } from "react-router-dom";
-import { useDisconnect, useNetwork } from "wagmi";
+import { useDisconnect, useNetwork, WagmiConfig } from "wagmi";
 import {
   makeRoundData,
   wrapWithApplicationContext,
@@ -18,6 +18,7 @@ import {
 } from "../../../test-utils";
 import { ProgressStatus, Round } from "../../api/types";
 import ViewRoundPage from "../ViewRoundPage";
+import { client } from "../../../app/wagmi";
 
 Object.assign(navigator, {
   clipboard: {
@@ -57,10 +58,15 @@ describe("View Round", () => {
       wrapWithBulkUpdateGrantApplicationContext(
         wrapWithApplicationContext(
           wrapWithReadProgramContext(
-            wrapWithRoundContext(<ViewRoundPage />, {
-              data: [mockRoundData],
-              fetchRoundStatus: ProgressStatus.IS_SUCCESS,
-            }),
+            wrapWithRoundContext(
+              <WagmiConfig config={client}>
+                <ViewRoundPage />
+              </WagmiConfig>,
+              {
+                data: [mockRoundData],
+                fetchRoundStatus: ProgressStatus.IS_SUCCESS,
+              }
+            ),
             { programs: [] }
           ),
           {

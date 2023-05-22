@@ -25,6 +25,8 @@ import {
   updateApplicationStatuses,
 } from "../../api/application";
 import { ProgressStatus } from "../../api/types";
+import { WagmiConfig } from "wagmi";
+import { client } from "../../../app/wagmi";
 
 jest.mock("../../api/application");
 jest.mock("react-router-dom", () => ({
@@ -405,23 +407,25 @@ export const renderWithContext = (
 ) =>
   render(
     <MemoryRouter>
-      <BulkUpdateGrantApplicationContext.Provider
-        value={{
-          ...initialBulkUpdateGrantApplicationState,
-          ...bulkUpdateApplicationStateOverrides,
-        }}
-      >
-        <ApplicationContext.Provider
+      <WagmiConfig config={client}>
+        <BulkUpdateGrantApplicationContext.Provider
           value={{
-            state: {
-              ...initialApplicationState,
-              ...grantApplicationStateOverrides,
-            },
-            dispatch,
+            ...initialBulkUpdateGrantApplicationState,
+            ...bulkUpdateApplicationStateOverrides,
           }}
         >
-          {ui}
-        </ApplicationContext.Provider>
-      </BulkUpdateGrantApplicationContext.Provider>
+          <ApplicationContext.Provider
+            value={{
+              state: {
+                ...initialApplicationState,
+                ...grantApplicationStateOverrides,
+              },
+              dispatch,
+            }}
+          >
+            {ui}
+          </ApplicationContext.Provider>
+        </BulkUpdateGrantApplicationContext.Provider>
+      </WagmiConfig>
     </MemoryRouter>
   );

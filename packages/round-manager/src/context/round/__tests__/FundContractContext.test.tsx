@@ -11,6 +11,8 @@ import {
   FundContractProvider,
   useFundContract,
 } from "../FundContractContext";
+import { client } from "../../../app/wagmi";
+import { WagmiConfig } from "wagmi";
 
 jest.mock("../../../features/api/subgraph");
 jest.mock("../../../features/api/application");
@@ -182,5 +184,9 @@ const TestUseFundContractComponent = (params: FundContractParams) => {
 };
 
 function renderWithProvider(ui: JSX.Element) {
-  render(<FundContractProvider>{ui}</FundContractProvider>);
+  render(
+    <WagmiConfig config={client}>
+      <FundContractProvider>{ui}</FundContractProvider>
+    </WagmiConfig>
+  );
 }
