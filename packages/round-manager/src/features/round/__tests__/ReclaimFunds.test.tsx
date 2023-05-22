@@ -13,24 +13,16 @@ import ViewRoundPage from "../ViewRoundPage";
 import { useParams } from "react-router-dom";
 import { useTokenPrice } from "common";
 
-jest.mock("wagmi");
-jest.mock("../../common/Auth");
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useSwitchNetwork: jest.fn(),
+  useBalance: jest.fn(),
+  useDisconnect: jest.fn(),
+}));
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useParams: jest.fn(),
-}));
-
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {},
-    address: mockRoundData.operatorWallets![0],
-    provider: {
-      network: {
-        chainId: 1,
-      },
-    },
-  }),
 }));
 
 jest.mock("../../api/utils", () => ({

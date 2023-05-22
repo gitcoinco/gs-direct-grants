@@ -17,8 +17,12 @@ import { MatchingStatsData, ProgressStatus, Round } from "../../api/types";
 import ViewFundGrantees from "../ViewFundGrantees";
 import { parseEther } from "viem";
 
-jest.mock("../../common/Auth");
-jest.mock("wagmi");
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useSwitchNetwork: jest.fn(),
+  useBalance: jest.fn(),
+  useDisconnect: jest.fn(),
+}));
 
 Object.assign(navigator, {
   clipboard: {
@@ -33,14 +37,6 @@ const mockRoundData: Round = makeRoundData();
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useParams: jest.fn(),
-}));
-
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {},
-    address: mockRoundData.operatorWallets![0],
-    provider: { getNetwork: () => ({ chainId: "0" }) },
-  }),
 }));
 
 const useFetchMatchingDistributionFromContractMock = jest.spyOn(

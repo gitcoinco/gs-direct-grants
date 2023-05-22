@@ -40,12 +40,6 @@ import {
 import { GrantApplication, ProgressStatus } from "../../api/types";
 
 jest.mock("../../api/application");
-jest.mock("../../common/Auth");
-
-jest.mock("../../../constants", () => ({
-  ...jest.requireActual("../../../constants"),
-  errorModalDelayMs: 0, // NB: use smaller delay for faster tests
-}));
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
@@ -60,7 +54,14 @@ const roundIdOverride = "some-round-id";
 
 jest.mock("@gitcoinco/passport-sdk-verifier");
 
-jest.mock("wagmi");
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useChainId: jest.fn(),
+  useAccount: jest.fn(),
+  useSwitchNetwork: jest.fn(),
+  useBalance: jest.fn(),
+  useDisconnect: jest.fn(),
+}));
 
 const verifyCredentialMock = jest.spyOn(
   PassportVerifier.prototype,

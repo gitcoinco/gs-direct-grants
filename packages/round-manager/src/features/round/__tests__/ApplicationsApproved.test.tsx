@@ -47,10 +47,6 @@ jest.mock("../../common/Auth", () => ({
     provider: { getNetwork: () => ({ chainId: "0" }) },
   }),
 }));
-jest.mock("../../../constants", () => ({
-  ...jest.requireActual("../../../constants"),
-  errorModalDelayMs: 0, // NB: use smaller delay for faster tests
-}));
 
 const grantApplications = [
   makeGrantApplicationData({ roundIdOverride }),

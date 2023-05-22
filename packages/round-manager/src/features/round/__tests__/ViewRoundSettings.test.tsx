@@ -19,31 +19,6 @@ import {
 import { ProgressStatus, Round } from "../../api/types";
 import ViewRoundPage from "../ViewRoundPage";
 
-jest.mock("../../common/Auth");
-jest.mock("wagmi");
-
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {
-      name: "Ethereum",
-    },
-    address: mockRoundData.operatorWallets![0],
-    signer: {
-      getChainId: () => {
-        /* do nothing */
-      },
-    },
-    provider: {
-      network: {
-        chainId: 1,
-      },
-      getNetwork: () => {
-        return { chainId: 1 };
-      },
-    },
-  }),
-}));
-
 Object.assign(navigator, {
   clipboard: {
     writeText: () => {
@@ -51,6 +26,12 @@ Object.assign(navigator, {
     },
   },
 });
+
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useNetwork: jest.fn(),
+  useDisconnect: jest.fn(),
+}));
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),

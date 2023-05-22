@@ -15,7 +15,6 @@ import { GrantApplication, ProgressStatus, Round } from "../../api/types";
 import ViewRoundPage from "../ViewRoundPage";
 
 jest.mock("../../common/Auth");
-jest.mock("wagmi");
 
 jest.mock("@rainbow-me/rainbowkit", () => ({
   ...jest.requireActual("@rainbow-me/rainbowkit"),
@@ -35,28 +34,6 @@ const mockRoundData: Round = makeRoundData();
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useParams: jest.fn(),
-}));
-
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {
-      name: "Ethereum",
-    },
-    address: mockRoundData.operatorWallets![0],
-    signer: {
-      getChainId: () => {
-        /* do nothing */
-      },
-    },
-    provider: {
-      network: {
-        chainId: 1,
-      },
-      getNetwork: () => {
-        return { chainId: 1 };
-      },
-    },
-  }),
 }));
 
 describe("View Round", () => {

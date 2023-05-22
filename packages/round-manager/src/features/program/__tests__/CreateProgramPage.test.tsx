@@ -17,11 +17,6 @@ jest.mock("@rainbow-me/rainbowkit", () => ({
   ConnectButton: jest.fn(),
 }));
 
-jest.mock("../../../constants", () => ({
-  ...jest.requireActual("../../../constants"),
-  errorModalDelayMs: 0, // NB: use smaller delay for faster tests
-}));
-
 describe("<CreateProgramPage />", () => {
   let consoleErrorSpy: jest.SpyInstance;
 

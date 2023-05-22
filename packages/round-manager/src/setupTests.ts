@@ -29,3 +29,9 @@ jest.mock("@rainbow-me/rainbowkit", () => ({
   ...jest.requireActual("@rainbow-me/rainbowkit"),
   ConnectButton: jest.fn(),
 }));
+
+// NB: use smaller delay for faster tests
+jest.mock("../../../constants", () => ({
+  ...jest.requireActual("../../../constants"),
+  errorModalDelayMs: 0,
+}));

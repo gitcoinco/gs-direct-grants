@@ -15,7 +15,10 @@ jest.mock("common", () => ({
   graphql_fetch: jest.fn(),
 }));
 
-jest.mock("viem");
+jest.mock("viem", () => ({
+  ...jest.requireActual("viem"),
+  getContract: jest.fn(),
+}));
 
 describe("getApplicationById", () => {
   let expectedApplication: GrantApplication;

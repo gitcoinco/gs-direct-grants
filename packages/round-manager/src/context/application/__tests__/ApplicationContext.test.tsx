@@ -12,13 +12,7 @@ import {
   getApplicationsByRoundId,
 } from "../../../features/api/application";
 
-const mockWallet = { address: "0x0", provider: {} };
-
 jest.mock("../../../features/api/application");
-jest.mock("../../../features/common/Auth", () => ({
-  useWallet: () => mockWallet,
-}));
-jest.mock("wagmi");
 
 describe("<ApplicationProvider />", () => {
   beforeEach(() => {

@@ -20,7 +20,6 @@ import ViewRoundPage from "../ViewRoundPage";
 import { useRound, useRoundMatchingFunds } from "../../../hooks";
 import { Round } from "../../api/types";
 
-jest.mock("../../common/Auth");
 jest.mock("../../api/round");
 
 export const mockNetwork = {
@@ -36,6 +35,7 @@ const mockSigner = {
   },
 };
 jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
   useNetwork: () => mockNetwork,
   useSigner: () => ({ data: mockSigner }),
   useDisconnect: jest.fn(),
@@ -82,11 +82,6 @@ jest.mock("../../common/Auth", () => ({
       },
     },
   }),
-}));
-
-jest.mock("../../../constants", () => ({
-  ...jest.requireActual("../../../constants"),
-  errorModalDelayMs: 0, // NB: use smaller delay for faster tests
 }));
 
 describe("View Round Results before distribution data is finalized to contract", () => {

@@ -11,11 +11,6 @@ import { RoundDetailForm } from "../RoundDetailForm";
 import { useChainId } from "wagmi";
 import { goerli } from "viem/chains";
 
-jest.mock("../../../constants", () => ({
-  ...jest.requireActual("../../../constants"),
-  errorModalDelayMs: 0, // NB: use smaller delay for faster tests
-}));
-
 jest.mock("wagmi", () => ({
   ...jest.requireActual("wagmi"),
   useChainId: jest.fn(),

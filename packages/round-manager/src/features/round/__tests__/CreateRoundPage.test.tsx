@@ -10,8 +10,12 @@ import QuadraticFundingForm from "../QuadraticFundingForm";
 import { useAccount } from "wagmi";
 
 jest.mock("../../common/Navbar");
-jest.mock("../../common/Auth");
 const formWizardSpy = jest.spyOn(FormWizardImport, "FormWizard");
+
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useAccount: jest.fn(),
+}));
 
 const programId = faker.finance.ethereumAddress();
 jest.mock("react-router-dom", () => ({

@@ -9,21 +9,9 @@ import {
   useFinalizeRound,
 } from "../FinalizeRoundContext";
 
-const mockWallet = {
-  address: "0x0",
-  signer: {
-    getChainId: () => {
-      /* do nothing.*/
-    },
-  },
-};
 jest.mock("../../../features/api/payoutStrategy/merklePayoutStrategy");
 jest.mock("../../../features/api/round");
 jest.mock("../../../features/api/ipfs");
-jest.mock("../../../features/common/Auth", () => ({
-  useWallet: () => mockWallet,
-}));
-jest.mock("wagmi");
 
 describe("<FinalizeRoundProvider />", () => {
   beforeEach(() => {

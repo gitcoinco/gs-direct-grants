@@ -18,26 +18,11 @@ import { useTokenPrice } from "common";
 const { TextDecoder } = require("util");
 global.TextDecoder = TextDecoder;
 
-jest.mock("../../common/Auth");
-jest.mock("wagmi");
-
 let mockRoundData: Round = makeRoundData();
 
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useParams: jest.fn(),
-}));
-
-jest.mock("../../common/Auth", () => ({
-  useWallet: () => ({
-    chain: {},
-    address: mockRoundData.operatorWallets![0],
-    provider: {
-      network: {
-        chainId: 1,
-      },
-    },
-  }),
 }));
 
 jest.mock("../../api/utils", () => ({
@@ -47,6 +32,14 @@ jest.mock("../../api/utils", () => ({
 jest.mock("common", () => ({
   ...jest.requireActual("common"),
   useTokenPrice: jest.fn(),
+}));
+
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useSwitchNetwork: jest.fn(),
+  useBalance: jest.fn(),
+  useAccount: jest.fn(),
+  useDisconnect: jest.fn(),
 }));
 
 describe("fund contract tab", () => {

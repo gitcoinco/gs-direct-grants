@@ -6,19 +6,6 @@ import { getRoundById, listRounds } from "../../../features/api/round";
 import { ProgressStatus, Round } from "../../../features/api/types";
 
 jest.mock("../../../features/api/round");
-jest.mock("wagmi");
-
-jest.mock("../../../features/common/Auth", () => ({
-  useWallet: () => mockWallet,
-}));
-const mockWallet = {
-  address: "0x0",
-  signer: {
-    getChainId: () => {
-      /* do nothing.*/
-    },
-  },
-};
 
 describe("<RoundProvider />", () => {
   beforeEach(() => {

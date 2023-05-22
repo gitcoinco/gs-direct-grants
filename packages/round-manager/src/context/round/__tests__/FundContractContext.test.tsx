@@ -12,18 +12,8 @@ import {
   useFundContract,
 } from "../FundContractContext";
 
-jest.mock("wagmi");
 jest.mock("../../../features/api/subgraph");
 jest.mock("../../../features/api/application");
-
-const mockSigner = {
-  getChainId: () => {
-    /* do nothing.*/
-  },
-};
-jest.mock("wagmi", () => ({
-  useSigner: () => ({ data: mockSigner }),
-}));
 
 const testParams: FundContractParams = {
   roundId: "testRoundId",

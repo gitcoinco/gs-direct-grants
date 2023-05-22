@@ -35,11 +35,6 @@ jest.mock("../../api/subgraph");
 jest.mock("../../api/payoutStrategy/merklePayoutStrategy");
 jest.mock("../../api/votingStrategy/qfVotingStrategy");
 
-jest.mock("../../../constants", () => ({
-  ...jest.requireActual("../../../constants"),
-  errorModalDelayMs: 0, // NB: use smaller delay for faster tests
-}));
-
 beforeEach(() => {
   jest.clearAllMocks();
 });
