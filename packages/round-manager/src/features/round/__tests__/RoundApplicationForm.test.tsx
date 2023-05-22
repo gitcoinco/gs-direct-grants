@@ -32,12 +32,8 @@ import { client as WagmiClient } from "../../../app/wagmi";
 jest.mock("../../api/ipfs");
 jest.mock("../../api/round");
 jest.mock("../../api/subgraph");
-jest.mock("../../common/Auth");
 jest.mock("../../api/payoutStrategy/merklePayoutStrategy");
 jest.mock("../../api/votingStrategy/qfVotingStrategy");
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
 
 jest.mock("../../../constants", () => ({
   ...jest.requireActual("../../../constants"),

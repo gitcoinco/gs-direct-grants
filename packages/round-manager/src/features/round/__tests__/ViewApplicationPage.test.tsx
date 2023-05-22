@@ -59,9 +59,7 @@ const applicationIdOverride = "some-application-id";
 const roundIdOverride = "some-round-id";
 
 jest.mock("@gitcoinco/passport-sdk-verifier");
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
+
 jest.mock("wagmi");
 
 const verifyCredentialMock = jest.spyOn(

@@ -12,9 +12,6 @@ import { useChainId } from "wagmi";
 import { goerli } from "viem/chains";
 
 jest.mock("../../common/Auth");
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
 
 jest.mock("../../../constants", () => ({
   ...jest.requireActual("../../../constants"),

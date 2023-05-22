@@ -11,9 +11,6 @@ jest.mock("../../common/Auth", () => ({
   }),
 }));
 jest.mock("wagmi");
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
 
 describe("<ListProgramPage />", () => {
   it("does not render a list of programs when no programs have been created", () => {

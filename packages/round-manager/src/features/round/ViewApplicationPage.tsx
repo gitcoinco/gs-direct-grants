@@ -38,22 +38,19 @@ import { Spinner } from "../common/Spinner";
 import { ApplicationBanner, ApplicationLogo } from "./BulkApplicationCommon";
 import { useRoundById } from "../../context/round/RoundContext";
 import ErrorModal from "../common/ErrorModal";
-import { errorModalDelayMs } from "../../constants";
+import { errorModalDelayMs, IAM_SERVER } from "../../constants";
 
 import {
   CalendarIcon,
   formatDateWithOrdinal,
+  renderToHTML,
   VerifiedCredentialState,
 } from "common";
-import { renderToHTML } from "common";
 import { useDebugMode } from "../../hooks";
 import { getAddress } from "viem";
 import { useAccount, useNetwork } from "wagmi";
 
 type ApplicationStatus = "APPROVED" | "REJECTED";
-
-export const IAM_SERVER =
-  "did:key:z6MkghvGHLobLEdj1bgRLhS4LPGJAvbMA1tn2zcRyqmYU5LC";
 
 const verifier = new PassportVerifier();
 

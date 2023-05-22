@@ -20,7 +20,6 @@ import tw from "tailwind-styled-components";
 import { ReactComponent as GrantExplorerLogo } from "../../assets/grantexplorer-icon.svg";
 import { useApplicationByRoundId } from "../../context/application/ApplicationContext";
 import { useRoundById } from "../../context/round/RoundContext";
-import { useDebugMode } from "../../hooks";
 import {
   ApplicationStatus,
   GrantApplication,
@@ -130,7 +129,7 @@ export default function ViewRoundPage() {
                 <div className="absolute right-0">
                   <ViewGrantsExplorerButton
                     iconStyle="h-4 w-4"
-                    chainId={`${chain.id}`}
+                    chainId={`${chain?.id}`}
                     roundId={id}
                   />
                 </div>
@@ -340,7 +339,7 @@ export default function ViewRoundPage() {
                     <Tab.Panel>
                       <ReclaimFunds
                         round={round}
-                        chainId={`${chain.id}`}
+                        chainId={`${chain?.id}`}
                         roundId={id}
                       />
                     </Tab.Panel>

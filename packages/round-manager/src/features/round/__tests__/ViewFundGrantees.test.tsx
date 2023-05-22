@@ -20,10 +20,6 @@ import { parseEther } from "viem";
 jest.mock("../../common/Auth");
 jest.mock("wagmi");
 
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
-
 Object.assign(navigator, {
   clipboard: {
     writeText: () => {

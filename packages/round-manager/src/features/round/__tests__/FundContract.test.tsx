@@ -21,10 +21,6 @@ global.TextDecoder = TextDecoder;
 jest.mock("../../common/Auth");
 jest.mock("wagmi");
 
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
-
 let mockRoundData: Round = makeRoundData();
 
 jest.mock("react-router-dom", () => ({

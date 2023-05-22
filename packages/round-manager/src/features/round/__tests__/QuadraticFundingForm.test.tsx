@@ -7,14 +7,14 @@ import { FormStepper } from "../../common/FormStepper";
 import QuadraticFundingForm from "../QuadraticFundingForm";
 import { useChainId } from "wagmi";
 
-jest.mock("../../common/Auth");
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
-
 jest.mock("../../../constants", () => ({
   ...jest.requireActual("../../../constants"),
   errorModalDelayMs: 0, // NB: use smaller delay for faster tests
+}));
+
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useChainId: jest.fn(),
 }));
 
 beforeEach(() => {

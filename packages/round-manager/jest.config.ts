@@ -7,11 +7,10 @@ const esModules = [
   "@gitcoinco",
 ];
 
-/** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 module.exports = {
   preset: "ts-jest/presets/js-with-ts",
   testEnvironment: "jsdom",
-  extensionsToTreatAsEsm: [".ts"],
+  // extensionsToTreatAsEsm: [".ts"],
   transformIgnorePatterns: [`/node_modules/.pnpm/(?!(${esModules.join("|")}))`],
   moduleNameMapper: {
     "^.+.(css|styl|less|sass|scss|png|jpg|svg|ttf|woff|woff2)$":

@@ -16,10 +16,6 @@ import { useTokenPrice } from "common";
 jest.mock("wagmi");
 jest.mock("../../common/Auth");
 
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
-
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
   useParams: jest.fn(),

@@ -17,14 +17,11 @@ jest.mock("../../../features/common/Auth", () => ({
   useWallet: () => mockWallet,
 }));
 jest.mock("wagmi");
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
 
 describe("TransactionBuilder", () => {
-  let round: Round = makeRoundData();
-  
-  let signer = ethers.Wallet.createRandom() as Signer;
+  const round: Round = makeRoundData();
+
+  const signer = ethers.Wallet.createRandom() as Signer;
   let transactionBuilder: TransactionBuilder;
 
   beforeEach(() => {
@@ -33,20 +30,20 @@ describe("TransactionBuilder", () => {
 
   it("should initialize correctly", () => {
     expect(transactionBuilder.round).toBe(round);
-    expect(transactionBuilder.signer).toBe(signer);
+    expect(transactionBuilder.walletClient).toBe(signer);
     expect(transactionBuilder.transactions).toEqual([]);
     expect(transactionBuilder.contract).toBeInstanceOf(ethers.Contract);
   });
 
   it("should throw an error when round ID is undefined", () => {
-    expect(() => new TransactionBuilder({...round, id: undefined}, signer)).toThrowError(
-      "Round ID is undefined",
-    );
+    expect(
+      () => new TransactionBuilder({ ...round, id: undefined }, signer)
+    ).toThrowError("Round ID is undefined");
   });
 
   it("should add a transaction to the builder", () => {
     const action = UpdateAction.UPDATE_APPLICATION_META_PTR;
-    const args = [{protocol: 1, pointer: "abcd"}];
+    const args = [{ protocol: 1, pointer: "abcd" }];
     transactionBuilder.add(action, args);
 
     const transactions = transactionBuilder.getTransactions();
@@ -55,14 +52,14 @@ describe("TransactionBuilder", () => {
 
   it("should add multiple transactions to the builder", () => {
     const action1 = UpdateAction.UPDATE_APPLICATION_META_PTR;
-    const args1 = [{protocol: 1, pointer: "abcd"}];
+    const args1 = [{ protocol: 1, pointer: "abcd" }];
     transactionBuilder.add(action1, args1);
 
     const action2 = UpdateAction.UPDATE_MATCH_AMOUNT;
     const args2 = [1];
 
     transactionBuilder.add(action2, args2);
-    
+
     const transactions = transactionBuilder.getTransactions();
     expect(transactions.length).toEqual(2);
   });
@@ -83,7 +80,7 @@ describe("TransactionBuilder", () => {
 
   it("should throw an error when there are no transactions to execute", async () => {
     await expect(transactionBuilder.execute()).rejects.toThrowError(
-      "No transactions to execute",
+      "No transactions to execute"
     );
   });
 

@@ -22,10 +22,6 @@ import ViewRoundPage from "../ViewRoundPage";
 jest.mock("../../common/Auth");
 jest.mock("wagmi");
 
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
-
 jest.mock("../../common/Auth", () => ({
   useWallet: () => ({
     chain: {

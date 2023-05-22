@@ -24,3 +24,8 @@ beforeEach(() => {
 
 // @ts-expect-error I love jest
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+jest.mock("@rainbow-me/rainbowkit", () => ({
+  ...jest.requireActual("@rainbow-me/rainbowkit"),
+  ConnectButton: jest.fn(),
+}));

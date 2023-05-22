@@ -19,9 +19,6 @@ jest.mock("../../../features/common/Auth", () => ({
   useWallet: () => mockWallet,
 }));
 jest.mock("wagmi");
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
 
 describe("<ApplicationProvider />", () => {
   beforeEach(() => {

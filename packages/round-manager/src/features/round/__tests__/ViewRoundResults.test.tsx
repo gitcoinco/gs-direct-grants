@@ -23,10 +23,6 @@ import { Round } from "../../api/types";
 jest.mock("../../common/Auth");
 jest.mock("../../api/round");
 
-jest.mock("@rainbow-me/rainbowkit", () => ({
-  ConnectButton: jest.fn(),
-}));
-
 export const mockNetwork = {
   chain: { id: 5, name: "Goerli" },
   chains: [

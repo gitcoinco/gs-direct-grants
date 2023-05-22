@@ -34,45 +34,47 @@ export enum UpdateAction {
   UPDATE_ROUND_START_AND_END_TIMES = "updateStartAndEndTimes",
   UPDATE_MATCH_AMOUNT = "updateMatchAmount",
   UPDATE_ROUND_FEE_ADDRESS = "updateRoundFeeAddress",
-  UPDATE_ROUND_FEE_PERCENTAGE = "updateRoundFeePercentage"
+  UPDATE_ROUND_FEE_PERCENTAGE = "updateRoundFeePercentage",
 }
-
-export class TransactionBuilder {
-  round: Round;
-  signer: Signer;
-  transactions: any[];
-  contract: any;
-
-  constructor(round: Round, signer: Signer) {
-    this.round = round;
-    this.signer = signer;
-    this.transactions = [];
-    if (round.id) {
-      this.contract = new ethers.Contract(
-        round.id,
-        roundImplementationContract.abi,
-        signer,
-      );
-    } else {
-      throw new Error("Round ID is undefined");
-    }
-  }
-
-  add(action: any, args: any[]) {
-    this.transactions.push(this.contract.interface.encodeFunctionData(action, args));
-  }
-
-  async execute(): Promise<TransactionResponse> {
-    if (this.transactions.length === 0) {
-      throw new Error("No transactions to execute");
-    }
-    return await this.contract.multicall(this.transactions);
-  }
-
-  getTransactions() {
-    return this.transactions;
-  }
-}
+//
+// export class TransactionBuilder {
+//   round: Round;
+//   walletClient: WalletClient;
+//   transactions: any[];
+//   contract: any;
+//
+//   constructor(round: Round, signer: WalletClient) {
+//     this.round = round;
+//     this.walletClient = signer;
+//     this.transactions = [];
+//     if (round.id) {
+//       this.contract = new ethers.Contract(
+//         round.id,
+//         roundImplementationContract.abi,
+//         signer
+//       );
+//     } else {
+//       throw new Error("Round ID is undefined");
+//     }
+//   }
+//
+//   add(action: any, args: any[]) {
+//     this.transactions.push(
+//       this.contract.interface.encodeFunctionData(action, args)
+//     );
+//   }
+//
+//   async execute(): Promise<TransactionResponse> {
+//     if (this.transactions.length === 0) {
+//       throw new Error("No transactions to execute");
+//     }
+//     return await this.contract.multicall(this.transactions);
+//   }
+//
+//   getTransactions() {
+//     return this.transactions;
+//   }
+// }
 
 /**
  * Fetch a round by ID
@@ -145,7 +147,7 @@ export async function getRoundById(
           }
         `,
       chainId,
-      { roundId: roundId },
+      { roundId: roundId }
     );
 
     const round: RoundResult = res.data.rounds[0];
@@ -165,11 +167,11 @@ export async function getRoundById(
 
     const approvedProjectsWithMetadata = await loadApprovedProjects(
       round,
-      chainId,
+      chainId
     );
 
     const operatorWallets = res.data.rounds[0].roles[0].accounts.map(
-      (account: { address: string }) => account.address,
+      (account: { address: string }) => account.address
     );
 
     const DENOMINATOR = 100000;
@@ -187,7 +189,7 @@ export async function getRoundById(
       roundMetadata,
       applicationMetadata,
       applicationsStartTime: new Date(
-        Number(round.applicationsStartTime) * 1000,
+        Number(round.applicationsStartTime) * 1000
       ),
       applicationsEndTime: new Date(Number(round.applicationsEndTime) * 1000),
       roundStartTime: new Date(Number(round.roundStartTime) * 1000),
@@ -219,7 +221,7 @@ export async function listRounds(
   address: string,
   signerOrProvider: PublicClient,
   programId: string,
-  roundId?: string,
+  roundId?: string
 ): Promise<{ rounds: Round[] }> {
   try {
     // fetch chain id
@@ -261,7 +263,7 @@ export async function listRounds(
           }
         `,
       chainId,
-      { address: address?.toLowerCase(), programId, roundId },
+      { address: address?.toLowerCase(), programId, roundId }
     );
 
     const rounds: Round[] = [];
@@ -274,7 +276,7 @@ export async function listRounds(
       ]);
 
       const operatorWallets = round.roles[0].accounts.map(
-        (account: { address: string }) => account.address,
+        (account: { address: string }) => account.address
       );
 
       rounds.push({
@@ -469,7 +471,7 @@ function convertStatus(status: string | number) {
 async function loadApprovedProjects(
   round: RoundResult,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  chainId: any,
+  chainId: any
 ): Promise<ApprovedProject[]> {
   if (!round.projectsMetaPtr || round.projects.length === 0) {
     return [];
@@ -477,11 +479,11 @@ async function loadApprovedProjects(
   const allRoundProjects = round.projects;
 
   const approvedProjects = allRoundProjects.filter(
-    (project) => project.status === ApplicationStatus.APPROVED,
+    (project) => project.status === ApplicationStatus.APPROVED
   );
   const fetchApprovedProjectMetadata: Promise<ApprovedProject>[] =
     approvedProjects.map((project: RoundProjectResult) =>
-      fetchMetadataAndMapProject(project, chainId),
+      fetchMetadataAndMapProject(project, chainId)
     );
   return Promise.all(fetchApprovedProjectMetadata);
 }
@@ -489,7 +491,7 @@ async function loadApprovedProjects(
 async function fetchMetadataAndMapProject(
   project: RoundProjectResult,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  chainId: any,
+  chainId: any
 ): Promise<ApprovedProject> {
   const applicationData = await fetchFromIPFS(project.metaPtr.pointer);
   // NB: applicationData can be in two formats:
@@ -515,7 +517,7 @@ async function fetchMetadataAndMapProject(
 export async function getProjectOwners(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   chainId: any,
-  projectRegistryId: string,
+  projectRegistryId: string
 ) {
   try {
     // get the subgraph for project owners by $projectRegistryId
@@ -536,7 +538,7 @@ export async function getProjectOwners(
       `,
       chainId,
       { projectRegistryId },
-      true,
+      true
     );
 
     return (

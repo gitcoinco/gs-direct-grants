@@ -39,11 +39,11 @@ import {
   ProjectStatus,
   Round,
 } from "./features/api/types";
-import { IAM_SERVER } from "./features/round/ViewApplicationPage";
 
 import { stringToHex, zeroAddress } from "viem";
 import { WagmiConfig } from "wagmi";
 import { client } from "./app/wagmi";
+import { IAM_SERVER } from "./constants";
 
 export const makeProgramData = (overrides: Partial<Program> = {}): Program => ({
   id: faker.finance.ethereumAddress(),
