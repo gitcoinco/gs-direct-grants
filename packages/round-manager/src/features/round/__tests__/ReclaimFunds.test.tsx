@@ -8,16 +8,27 @@ import {
 } from "../../../test-utils";
 import ReclaimFunds from "../ReclaimFunds";
 import { ProgressStatus, Round } from "../../api/types";
-import { useBalance, useDisconnect, useSwitchNetwork } from "wagmi";
+import {
+  useBalance,
+  useDisconnect,
+  useSwitchNetwork,
+  WagmiConfig,
+} from "wagmi";
 import ViewRoundPage from "../ViewRoundPage";
 import { useParams } from "react-router-dom";
 import { useTokenPrice } from "common";
+import { client } from "../../../app/wagmi";
 
 jest.mock("wagmi", () => ({
   ...jest.requireActual("wagmi"),
   useSwitchNetwork: jest.fn(),
   useBalance: jest.fn(),
   useDisconnect: jest.fn(),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
+    },
+  }),
 }));
 
 jest.mock("react-router-dom", () => ({
@@ -97,10 +108,15 @@ describe("ReclaimFunds", () => {
         wrapWithBulkUpdateGrantApplicationContext(
           wrapWithApplicationContext(
             wrapWithReadProgramContext(
-              wrapWithRoundContext(<ViewRoundPage />, {
-                data: [mockRoundData],
-                fetchRoundStatus: ProgressStatus.IS_SUCCESS,
-              }),
+              wrapWithRoundContext(
+                <WagmiConfig config={client}>
+                  <ViewRoundPage />
+                </WagmiConfig>,
+                {
+                  data: [mockRoundData],
+                  fetchRoundStatus: ProgressStatus.IS_SUCCESS,
+                }
+              ),
               { programs: [] }
             ),
             {

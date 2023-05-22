@@ -47,6 +47,11 @@ jest.mock("wagmi", () => ({
   useBalance: jest.fn(),
   useAccount: jest.fn(),
   useDisconnect: jest.fn(),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
+    },
+  }),
 }));
 
 describe("fund contract tab", () => {

@@ -15,6 +15,13 @@ jest.mock("common", () => ({
   graphql_fetch: jest.fn(),
 }));
 
+jest.mock("@wagmi/core", () => ({
+  ...jest.requireActual("@wagmi/core"),
+  getPublicClient: () => ({
+    getChainId: () => 5,
+  }),
+}));
+
 describe("listPrograms", () => {
   it("calls the graphql endpoint and maps the metadata from IPFS", async () => {
     // const address = "0x0"
@@ -50,10 +57,7 @@ describe("listPrograms", () => {
       name: expectedProgram.metadata?.name,
     });
 
-    const actualPrograms = await listPrograms(
-      "0x0",
-      publicClient({ chainId: 5 })
-    );
+    const actualPrograms = await listPrograms("0x0");
 
     expect(actualPrograms).toEqual(expectedPrograms);
   });
@@ -92,10 +96,7 @@ describe("getProgramById", () => {
       name: expectedProgram.metadata?.name,
     });
 
-    const actualProgram = await getProgramById(
-      programId as string,
-      publicClient({ chainId: 5 })
-    );
+    const actualProgram = await getProgramById(programId as string);
 
     expect(actualProgram).toEqual(expectedProgram);
     const graphqlFetchCall = (graphql_fetch as jest.Mock).mock.calls[0];

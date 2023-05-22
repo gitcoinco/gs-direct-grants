@@ -12,22 +12,17 @@ import {
   PublicClient,
 } from "viem";
 import { WalletClient } from "wagmi";
-import { waitForTransaction } from "@wagmi/core";
+import { getPublicClient, waitForTransaction } from "@wagmi/core";
 import ProgramFactoryABI from "./abi/ProgramFactoryABI";
 
 /**
  * Fetch a list of programs
  * @param address - a valid program operator
- * @param publicClient - provider
  *
  */
-export async function listPrograms(
-  address: string,
-  publicClient: PublicClient
-): Promise<Program[]> {
+export async function listPrograms(address: string): Promise<Program[]> {
   try {
-    // fetch chain id
-    const chainId = await publicClient.getChainId();
+    const chainId = await getPublicClient().getChainId();
 
     // get the subgraph for all programs owned by the given address
     const res = await graphql_fetch(
@@ -84,13 +79,9 @@ export async function listPrograms(
   }
 }
 
-export async function getProgramById(
-  programId: string,
-  publicClient: PublicClient
-): Promise<Program> {
+export async function getProgramById(programId: string): Promise<Program> {
   try {
-    // fetch chain id
-    const chainId = await publicClient.getChainId();
+    const chainId = await getPublicClient().getChainId();
 
     // get the subgraph for program by $programId
     const res = await graphql_fetch(

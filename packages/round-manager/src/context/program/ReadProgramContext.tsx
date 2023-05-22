@@ -38,11 +38,7 @@ export const initialReadProgramState: ReadProgramState = {
 };
 export const ReadProgramContext = createContext<ProgramContextType>(undefined);
 
-const fetchProgramsByAddress = async (
-  dispatch: Dispatch,
-  address: string,
-  publicClient: PublicClient
-) => {
+const fetchProgramsByAddress = async (dispatch: Dispatch, address: string) => {
   datadogLogs.logger.info(`fetchProgramsByAddress: address - ${address}`);
 
   dispatch({
@@ -50,7 +46,7 @@ const fetchProgramsByAddress = async (
     payload: ProgressStatus.IN_PROGRESS,
   });
   try {
-    const programs = await listPrograms(address, publicClient);
+    const programs = await listPrograms(address);
     dispatch({ type: ActionType.SET_PROGRAMS, payload: programs });
     dispatch({
       type: ActionType.SET_FETCH_PROGRAM_STATUS,
@@ -68,11 +64,7 @@ const fetchProgramsByAddress = async (
   }
 };
 
-const fetchProgramsById = async (
-  dispatch: Dispatch,
-  programId: string,
-  publicClient: PublicClient
-) => {
+const fetchProgramsById = async (dispatch: Dispatch, programId: string) => {
   datadogLogs.logger.info(`fetchProgramsById: programId - ${programId}`);
 
   dispatch({
@@ -80,7 +72,7 @@ const fetchProgramsById = async (
     payload: ProgressStatus.IN_PROGRESS,
   });
   try {
-    const program = await getProgramById(programId, publicClient);
+    const program = await getProgramById(programId);
     dispatch({ type: ActionType.SET_PROGRAMS, payload: [program] });
     dispatch({
       type: ActionType.SET_FETCH_PROGRAM_STATUS,
@@ -148,7 +140,7 @@ export const usePrograms = (): ReadProgramState & { dispatch: Dispatch } => {
   const { address } = useAccount();
 
   useEffect(() => {
-    fetchProgramsByAddress(context.dispatch, address ?? "", publicClient);
+    fetchProgramsByAddress(context.dispatch, address ?? "");
   }, [address, publicClient]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { ...context.state, dispatch: context.dispatch };
@@ -175,7 +167,7 @@ export const useProgramById = (
       );
 
       if (!existingProgram) {
-        fetchProgramsById(context.dispatch, id, publicClient);
+        fetchProgramsById(context.dispatch, id);
       }
     }
   }, [id, publicClient]); // eslint-disable-line react-hooks/exhaustive-deps

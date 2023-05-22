@@ -2,7 +2,7 @@
 import { faker } from "@faker-js/faker";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useParams } from "react-router-dom";
-import { useDisconnect, useSwitchNetwork } from "wagmi";
+import { useDisconnect, useSwitchNetwork, WagmiConfig } from "wagmi";
 import {
   makeApprovedProjectData,
   makeMatchingStatsData,
@@ -19,6 +19,8 @@ import { ProgressStatus } from "../../api/types";
 import ViewRoundPage from "../ViewRoundPage";
 import { useRound, useRoundMatchingFunds } from "../../../hooks";
 import { Round } from "../../api/types";
+import { data } from "autoprefixer";
+import { client } from "../../../app/wagmi";
 
 jest.mock("../../api/round");
 
@@ -38,6 +40,11 @@ jest.mock("wagmi", () => ({
   ...jest.requireActual("wagmi"),
   useNetwork: () => mockNetwork,
   useSigner: () => ({ data: mockSigner }),
+  useWalletClient: () => ({
+    data: {
+      getChainId: () => 5,
+    },
+  }),
   useDisconnect: jest.fn(),
   useSwitchNetwork: jest.fn(),
 }));
@@ -155,10 +162,15 @@ describe("View Round Results before distribution data is finalized to contract",
           wrapWithApplicationContext(
             wrapWithReadProgramContext(
               wrapWithFinalizeRoundContext(
-                wrapWithRoundContext(<ViewRoundPage />, {
-                  data: [mockRoundData],
-                  fetchRoundStatus: ProgressStatus.IS_SUCCESS,
-                })
+                wrapWithRoundContext(
+                  <WagmiConfig config={client}>
+                    <ViewRoundPage />
+                  </WagmiConfig>,
+                  {
+                    data: [mockRoundData],
+                    fetchRoundStatus: ProgressStatus.IS_SUCCESS,
+                  }
+                )
               )
             )
           )
@@ -217,10 +229,15 @@ describe("View Round Results before distribution data is finalized to contract",
           wrapWithFinalizeRoundContext(
             wrapWithApplicationContext(
               wrapWithReadProgramContext(
-                wrapWithRoundContext(<ViewRoundPage />, {
-                  data: [mockRoundData],
-                  fetchRoundStatus: ProgressStatus.IS_SUCCESS,
-                }),
+                wrapWithRoundContext(
+                  <WagmiConfig config={client}>
+                    <ViewRoundPage />
+                  </WagmiConfig>,
+                  {
+                    data: [mockRoundData],
+                    fetchRoundStatus: ProgressStatus.IS_SUCCESS,
+                  }
+                ),
                 { programs: [] }
               ),
               {
@@ -319,10 +336,15 @@ describe("View Round Results after distribution data is finalized to contract", 
         wrapWithApplicationContext(
           wrapWithReadProgramContext(
             wrapWithFinalizeRoundContext(
-              wrapWithRoundContext(<ViewRoundPage />, {
-                data: [mockRoundData],
-                fetchRoundStatus: ProgressStatus.IS_SUCCESS,
-              })
+              wrapWithRoundContext(
+                <WagmiConfig config={client}>
+                  <ViewRoundPage />
+                </WagmiConfig>,
+                {
+                  data: [mockRoundData],
+                  fetchRoundStatus: ProgressStatus.IS_SUCCESS,
+                }
+              )
             )
           )
         )
