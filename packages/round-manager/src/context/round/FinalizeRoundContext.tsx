@@ -8,7 +8,7 @@ import { saveToIPFS } from "../../features/api/ipfs";
 import { datadogLogs } from "@datadog/browser-logs";
 import { generateMerkleTree } from "../../features/api/utils";
 import { updateDistributionToContract } from "../../features/api/payoutStrategy/merklePayoutStrategy";
-import { encodeAbiParameters, parseAbiParameters, toHex } from "viem";
+import { encodeAbiParameters, Hex, parseAbiParameters, toHex } from "viem";
 import { useWalletClient, WalletClient } from "wagmi";
 
 export interface FinalizeRoundState {
@@ -254,13 +254,8 @@ function encodeDistributionParameters(
   merkleRoot: string,
   distributionMetaPtr: MetadataPointer
 ) {
-  const bigintDistributionMetaPtr = {
-    ...distributionMetaPtr,
-    protocol: BigInt(distributionMetaPtr.protocol),
-  };
-
-  return encodeAbiParameters(
-    parseAbiParameters("bytes32 merkleRoot, (uint256 protocol,string pointer)"),
-    [toHex(merkleRoot), bigintDistributionMetaPtr]
-  );
+  return encodeAbiParameters(parseAbiParameters("bytes32,(uint256,string)"), [
+    merkleRoot as Hex,
+    [BigInt(distributionMetaPtr.protocol), distributionMetaPtr.pointer],
+  ]);
 }

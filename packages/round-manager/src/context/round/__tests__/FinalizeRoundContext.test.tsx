@@ -15,6 +15,13 @@ jest.mock("../../../features/api/payoutStrategy/merklePayoutStrategy");
 jest.mock("../../../features/api/round");
 jest.mock("../../../features/api/ipfs");
 
+jest.mock("wagmi", () => ({
+  ...jest.requireActual("wagmi"),
+  useWalletClient: () => ({
+    data: {},
+  }),
+}));
+
 describe("<FinalizeRoundProvider />", () => {
   beforeEach(() => {
     jest.resetAllMocks();
@@ -32,7 +39,6 @@ describe("<FinalizeRoundProvider />", () => {
 
       const finalizeRound = screen.getByTestId("finalize-round");
       fireEvent.click(finalizeRound);
-
       expect(
         await screen.findByTestId(
           `storing-status-is-${ProgressStatus.IN_PROGRESS}`

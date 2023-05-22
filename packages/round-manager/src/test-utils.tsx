@@ -48,7 +48,7 @@ import { IAM_SERVER } from "./constants";
 export const makeProgramData = (overrides: Partial<Program> = {}): Program => ({
   id: faker.finance.ethereumAddress(),
   metadata: {
-    name: faker.company.bsBuzz(),
+    name: faker.company.buzzVerb(),
   },
   // TODO add this back in for createProgram
   // store: {
@@ -61,7 +61,10 @@ export const makeProgramData = (overrides: Partial<Program> = {}): Program => ({
 
 export const makeRoundData = (overrides: Partial<Round> = {}): Round => {
   const applicationsStartTime = faker.date.soon();
-  const applicationsEndTime = faker.date.soon(10, applicationsStartTime);
+  const applicationsEndTime = faker.date.soon({
+    days: 10,
+    refDate: applicationsStartTime,
+  });
   const roundStartTime = faker.date.future(1, applicationsEndTime);
   const roundEndTime = faker.date.soon(21, roundStartTime);
   const roundFeePercentage = 10000;
@@ -113,7 +116,7 @@ export const makeMatchingStatsData = (): MatchingStatsData => {
   return {
     projectName: faker.company.name(),
     applicationId: faker.datatype.number().toString(),
-    projectId: stringToHex(faker.company.name().slice(0, 31)),
+    projectId: stringToHex(faker.company.name().slice(0, 31), { size: 32 }),
     uniqueContributorsCount: faker.datatype.number(),
     contributionsCount: faker.datatype.number(),
     matchPoolPercentage: faker.datatype.number(),
