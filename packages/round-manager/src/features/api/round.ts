@@ -70,9 +70,8 @@ export class TransactionBuilder {
     args: AbiParametersToPrimitiveTypes<TAbiFunction["inputs"], "inputs">
   ) {
     this.transactions.push(
+      // @ts-expect-error viem internal type error
       encodeFunctionData<TAbi, TFunctionName>({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
         abi: RoundImplementationABI,
         functionName,
         args,
