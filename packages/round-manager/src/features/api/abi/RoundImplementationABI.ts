@@ -1,4 +1,4 @@
-export const abi = [
+export default [
   {
     anonymous: false,
     inputs: [
@@ -796,6 +796,25 @@ export const abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "bytes[]",
+        name: "data",
+        type: "bytes[]",
+      },
+    ],
+    name: "multicall",
+    outputs: [
+      {
+        internalType: "bytes[]",
+        name: "results",
+        type: "bytes[]",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "nextApplicationIndex",
     outputs: [
@@ -813,7 +832,20 @@ export const abi = [
     name: "payoutStrategy",
     outputs: [
       {
-        internalType: "contract IPayoutStrategy",
+        internalType: "address payable",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "payoutStrategyFactory",
+    outputs: [
+      {
+        internalType: "contract IPayoutStrategyFactory",
         name: "",
         type: "address",
       },
@@ -1126,7 +1158,20 @@ export const abi = [
     name: "votingStrategy",
     outputs: [
       {
-        internalType: "contract IVotingStrategy",
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "votingStrategyFactory",
+    outputs: [
+      {
+        internalType: "contract IVotingStrategyFactory",
         name: "",
         type: "address",
       },

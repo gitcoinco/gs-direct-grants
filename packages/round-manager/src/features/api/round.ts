@@ -22,58 +22,83 @@ import {
   parseUnits,
   PublicClient,
   zeroAddress,
+  GetContractReturnType,
+  encodeFunctionData,
 } from "viem";
 import { WalletClient } from "wagmi";
 import { waitForTransaction } from "@wagmi/core";
 import RoundFactoryABI from "./abi/RoundFactoryABI";
+import RoundImplementationABI from "./abi/RoundImplementationABI";
+import {
+  AbiFunction,
+  AbiParametersToPrimitiveTypes,
+  ExtractAbiFunction,
+  ExtractAbiFunctionNames,
+} from "abitype";
 
-export enum UpdateAction {
-  UPDATE_APPLICATION_META_PTR = "updateApplicationMetaPtr",
-  UPDATE_ROUND_META_PTR = "updateRoundMetaPtr",
-  UPDATE_ROUND_START_AND_END_TIMES = "updateStartAndEndTimes",
-  UPDATE_MATCH_AMOUNT = "updateMatchAmount",
-  UPDATE_ROUND_FEE_ADDRESS = "updateRoundFeeAddress",
-  UPDATE_ROUND_FEE_PERCENTAGE = "updateRoundFeePercentage",
+export class TransactionBuilder {
+  round: Round;
+  walletClient: WalletClient;
+  transactions: Hex[];
+  contract: GetContractReturnType<
+    typeof RoundImplementationABI,
+    null,
+    WalletClient
+  >;
+
+  constructor(round: Round, walletClient: WalletClient) {
+    this.round = round;
+    this.walletClient = walletClient;
+    this.transactions = [];
+    if (round.id) {
+      this.contract = getContract({
+        address: round.id as Hex,
+        abi: RoundImplementationABI,
+        walletClient,
+      });
+    } else {
+      throw new Error("Round ID is undefined");
+    }
+  }
+
+  add<
+    TAbi extends typeof RoundImplementationABI,
+    TFunctionName extends ExtractAbiFunctionNames<TAbi>,
+    TAbiFunction extends AbiFunction = ExtractAbiFunction<TAbi, TFunctionName>
+  >(
+    functionName: TFunctionName | ExtractAbiFunctionNames<TAbi>,
+    args: AbiParametersToPrimitiveTypes<TAbiFunction["inputs"], "inputs">
+  ) {
+    this.transactions.push(
+      encodeFunctionData<TAbi, TFunctionName>({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        abi: RoundImplementationABI,
+        functionName,
+        args,
+      })
+    );
+  }
+
+  async execute() {
+    if (this.transactions.length === 0) {
+      throw new Error("No transactions to execute");
+    }
+    const contract = getContract({
+      address: this.round.id as Hex,
+      abi: RoundImplementationABI,
+      walletClient: this.walletClient,
+    });
+    const tx = await contract.write.multicall([this.transactions]);
+    return await waitForTransaction({
+      hash: tx,
+    });
+  }
+
+  getTransactions() {
+    return this.transactions;
+  }
 }
-//
-// export class TransactionBuilder {
-//   round: Round;
-//   walletClient: WalletClient;
-//   transactions: any[];
-//   contract: any;
-//
-//   constructor(round: Round, signer: WalletClient) {
-//     this.round = round;
-//     this.walletClient = signer;
-//     this.transactions = [];
-//     if (round.id) {
-//       this.contract = new ethers.Contract(
-//         round.id,
-//         roundImplementationContract.abi,
-//         signer
-//       );
-//     } else {
-//       throw new Error("Round ID is undefined");
-//     }
-//   }
-//
-//   add(action: any, args: any[]) {
-//     this.transactions.push(
-//       this.contract.interface.encodeFunctionData(action, args)
-//     );
-//   }
-//
-//   async execute(): Promise<TransactionResponse> {
-//     if (this.transactions.length === 0) {
-//       throw new Error("No transactions to execute");
-//     }
-//     return await this.contract.multicall(this.transactions);
-//   }
-//
-//   getTransactions() {
-//     return this.transactions;
-//   }
-// }
 
 /**
  * Fetch a round by ID
@@ -338,10 +363,6 @@ export async function deployRoundContract(
       new Date(round.roundStartTime).getTime() / 1000,
       new Date(round.roundEndTime).getTime() / 1000,
     ];
-
-    const initMetaPtr = [round.store, round.applicationStore];
-
-    const initRoles = [[addresses[0]], round.operatorWallets];
 
     // Ensure tokenAmount is normalized to token decimals
     const tokenAmount =
