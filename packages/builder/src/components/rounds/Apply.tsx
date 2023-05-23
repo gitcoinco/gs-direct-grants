@@ -1,3 +1,4 @@
+import colors from "common/src/colors";
 import { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -14,7 +15,6 @@ import {
 } from "../../reducers/roundApplication";
 import { Status as RoundStatus } from "../../reducers/rounds";
 import { grantsPath, projectPath, roundPath } from "../../routes";
-import colors from "common/src/colors";
 import { Round } from "../../types";
 import { applicationSteps } from "../../utils/steps";
 import { getProjectURIComponents } from "../../utils/utils";
