@@ -145,7 +145,6 @@ const _createRound = async ({
       );
     }
 
-
     const { roundMetadataIpfsHash, applicationSchemaIpfsHash } =
       await storeDocuments(
         setIPFSCurrentStatus,
