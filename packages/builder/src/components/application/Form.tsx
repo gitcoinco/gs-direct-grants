@@ -1,3 +1,4 @@
+import GreenVerifiedBadge from "common/src/components/badges/GreenVerifiedBadge";
 import { Stack } from "@chakra-ui/react";
 import { datadogRum } from "@datadog/browser-rum";
 import { ExclamationCircleIcon } from "@heroicons/react/20/solid";
@@ -60,7 +61,6 @@ import {
   TextInputAddress,
 } from "../grants/inputs";
 import Calendar from "../icons/Calendar";
-import GreenVerifiedBadge from "../badges/GreenVerifiedBadge";
 
 const validation = {
   messages: [""],
