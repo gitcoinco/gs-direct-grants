@@ -6,7 +6,7 @@ import { deployProgramContract } from "../../features/api/program";
 import { datadogLogs } from "@datadog/browser-logs";
 import { useWalletClient, WalletClient } from "wagmi";
 import { PublicClient } from "viem";
-import { getPublicClient } from "@wagmi/core";
+import { getNetwork, getPublicClient } from "@wagmi/core";
 
 export interface CreateProgramState {
   IPFSCurrentStatus: ProgressStatus;
@@ -258,7 +258,7 @@ async function waitForSubgraphToUpdate(
       payload: { indexingStatus: ProgressStatus.IN_PROGRESS },
     });
 
-    const chainId = await publicClient.getChainId();
+    const chainId = getNetwork().chain?.id ?? 1;
 
     await waitForSubgraphSyncTo(chainId, transactionBlockNumber);
 
@@ -267,6 +267,7 @@ async function waitForSubgraphToUpdate(
       payload: { indexingStatus: ProgressStatus.IS_SUCCESS },
     });
   } catch (error) {
+    debugger;
     datadogLogs.logger.error(
       `error: waitForSubgraphToUpdate - ${error}. Data - ${transactionBlockNumber}`
     );

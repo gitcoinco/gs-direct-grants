@@ -11,21 +11,9 @@ import { faker } from "@faker-js/faker";
 import { WagmiConfig } from "wagmi";
 import { client } from "../../../app/wagmi";
 
-const mockWallet = {
-  address: "0x0",
-  signer: {
-    getChainId: () => {
-      /* do nothing.*/
-    },
-  },
-};
-
 jest.mock("../../../features/api/program");
 jest.mock("../../../features/api/ipfs");
 jest.mock("../../../features/api/subgraph");
-jest.mock("../../../features/common/Auth", () => ({
-  useWallet: () => mockWallet,
-}));
 
 jest.mock("@rainbow-me/rainbowkit", () => ({
   ...jest.requireActual("@rainbow-me/rainbowkit"),
