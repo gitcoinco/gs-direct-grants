@@ -1965,18 +1965,21 @@ function Funding(props: {
           )}
         </div>
       </div>
-      <div>
-        <span className="mt-4 inline-flex text-sm text-gray-600 mb-8 bg-grey-50 p-2 w-full rounded-lg">
-          A single project can only receive a maximum of{" "}
-          {props.editedRound?.roundMetadata?.quadraticFundingConfig
-            ?.matchingCapAmount ?? 0}
-          % of the matching fund (
-          {(matchingFunds / 100) *
-            (props.editedRound?.roundMetadata?.quadraticFundingConfig
-              ?.matchingCapAmount ?? 0)}{" "}
-          {matchingFundPayoutToken.name}).
-        </span>
-      </div>
+
+      {props.editedRound?.roundMetadata?.quadraticFundingConfig.matchingCap && (
+        <div>
+          <span className="mt-4 inline-flex text-sm text-gray-600 mb-8 bg-grey-50 p-2 w-full rounded-lg">
+            A single project can only receive a maximum of{" "}
+            {props.editedRound?.roundMetadata?.quadraticFundingConfig
+              ?.matchingCapAmount ?? 0}
+            % of the matching fund (
+            {(matchingFunds / 100) *
+              (props.editedRound?.roundMetadata?.quadraticFundingConfig
+                ?.matchingCapAmount ?? 0)}{" "}
+            {matchingFundPayoutToken.name}).
+          </span>
+        </div>
+      )}
       <span className="mt-4 inline-flex text-lg font-light text-gray-600 mb-4">
         Minimum Donation Threshold
       </span>
@@ -2172,15 +2175,17 @@ function Funding(props: {
           )}
         </div>
       </div>
-      <div>
-        <span className="mt-4 inline-flex text-sm text-gray-600 mb-8 bg-grey-50 p-2 w-full rounded-lg">
-          Each donation has to be a minimum of{" "}
-          {props.editedRound?.roundMetadata?.quadraticFundingConfig
-            ?.minDonationThresholdAmount ?? 0}{" "}
-          USD equivalent for it to be eligible for matching.
-        </span>
-      </div>
-
+      {props.editedRound?.roundMetadata?.quadraticFundingConfig
+        .minDonationThreshold && (
+        <div>
+          <span className="mt-4 inline-flex text-sm text-gray-600 mb-8 bg-grey-50 p-2 w-full rounded-lg">
+            Each donation has to be a minimum of{" "}
+            {props.editedRound?.roundMetadata?.quadraticFundingConfig
+              ?.minDonationThresholdAmount ?? 0}{" "}
+            USD equivalent for it to be eligible for matching.
+          </span>
+        </div>
+      )}
       <div>
         <span className="mt-2 inline-flex text-lg font-light text-gray-600 mb-2">
           Sybil Defense
