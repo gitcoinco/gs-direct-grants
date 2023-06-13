@@ -2,6 +2,7 @@ import { datadogLogs } from "@datadog/browser-logs";
 import { datadogRum } from "@datadog/browser-rum";
 import { ethers } from "ethers";
 import { Dispatch } from "redux";
+import NewProjectRegistryABI from "../contracts/abis/NewProjectRegistry.json";
 import ProjectRegistryABI from "../contracts/abis/ProjectRegistry.json";
 import { addressesByChainID } from "../contracts/deployments";
 import { global } from "../global";
@@ -126,34 +127,47 @@ export const publishGrant =
     const { chainID, account } = state.web3;
     const addresses = addressesByChainID(chainID!);
     const { signer } = global;
+
+    const projectRegistryContract = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+      ? addresses.newProjectRegistry!
+      : addresses.projectRegistry!;
+    const projectRegistryABI = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+      ? NewProjectRegistryABI
+      : ProjectRegistryABI;
     const projectRegistry = new ethers.Contract(
-      addresses.projectRegistry!,
-      ProjectRegistryABI,
+      projectRegistryContract,
+      projectRegistryABI,
       signer
     );
 
     dispatch(grantStatus(Status.WaitingForSignature));
     let projectTx;
+    const projectMetadata = {
+      protocol: 1,
+      pointer: metadataCID,
+    };
     try {
       if (grantId !== undefined) {
-        projectTx = await projectRegistry.updateProjectMetadata(grantId, {
-          protocol: 1,
-          pointer: metadataCID,
-        });
-      } else {
-        const projectMetadata = {
-          protocol: 1,
-          pointer: metadataCID,
-        };
-        const nullMetadata = {
-          protocol: 0,
-          pointer: metadataCID,
-        };
-        projectTx = await projectRegistry.createProject(
-          [account],
-          projectMetadata,
-          nullMetadata
+        // existing Project
+        projectTx = await projectRegistry.updateProjectMetadata(
+          grantId,
+          projectMetadata
         );
+      } else {
+        // brand new Project
+        if (process.env.REACT_APP_DIRECT_GRANTS_ENABLED) {
+          const nullMetadata = {
+            protocol: 0,
+            pointer: metadataCID,
+          };
+          projectTx = await projectRegistry.createProject(
+            [account],
+            projectMetadata,
+            nullMetadata
+          );
+        } else {
+          projectTx = await projectRegistry.createProject(projectMetadata);
+        }
       }
     } catch (e) {
       datadogRum.addError(e);

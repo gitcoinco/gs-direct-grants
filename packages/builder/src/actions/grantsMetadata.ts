@@ -2,10 +2,11 @@ import { datadogRum } from "@datadog/browser-rum";
 import { ethers } from "ethers";
 import { Dispatch } from "redux";
 import { RootState } from "../reducers";
+import NewProjectRegistryABI from "../contracts/abis/NewProjectRegistry.json";
 import ProjectRegistryABI from "../contracts/abis/ProjectRegistry.json";
 import PinataClient from "../services/pinata";
 import { LocalStorage } from "../services/Storage";
-import { Metadata, ProjectRegistryMetadata } from "../types";
+import { Metadata } from "../types";
 import { getProjectURIComponents, getProviderByChainId } from "../utils/utils";
 
 export const GRANT_METADATA_LOADING_URI = "GRANT_METADATA_LOADING_URI";
@@ -78,16 +79,19 @@ const getProjectById = async (
   addresses: any,
   signerOrProvider: any
 ) => {
+  const projectRegistryABI = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+    ? NewProjectRegistryABI
+    : ProjectRegistryABI;
   const projectRegistry = new ethers.Contract(
     addresses.projectRegistry,
-    ProjectRegistryABI,
+    projectRegistryABI,
     signerOrProvider
   );
 
   const { id } = getProjectURIComponents(projectId);
-  const project: ProjectRegistryMetadata = await projectRegistry.projects(id);
+  const project = await projectRegistry.projects(id);
 
-  return project;
+  return project as any;
 };
 
 // This fills the createdAt timestamp from the block creation time
@@ -124,6 +128,13 @@ const getMetadata = async (
   const storage = new LocalStorage();
   let metadata: Metadata;
 
+  const projectProtocol = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+    ? project.projectMetadata.protocol
+    : project.metadata.protocol;
+  const projectPointer = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+    ? project.projectMetadata.pointer
+    : project.metadata.pointer;
+
   if (storage.supported) {
     const item = storage.get(cacheKey);
     if (item !== null) {
@@ -133,8 +144,8 @@ const getMetadata = async (
         const ret = await ensureMetadataTimestamps(
           {
             ...metadata,
-            protocol: project.projectMetadata.protocol,
-            pointer: project.projectMetadata.pointer,
+            protocol: projectProtocol,
+            pointer: projectPointer,
             id: projectId,
           },
           appProvider,
@@ -157,7 +168,7 @@ const getMetadata = async (
   try {
     // FIXME: fetch from pinata gateway
     const pinataClient = new PinataClient();
-    content = await pinataClient.fetchText(project.projectMetadata.pointer);
+    content = await pinataClient.fetchText(projectPointer);
   } catch (e) {
     // FIXME: dispatch "ipfs error"
     datadogRum.addError(e);
@@ -181,8 +192,8 @@ const getMetadata = async (
 
   const ret = {
     ...metadata,
-    protocol: project.projectMetadata.protocol,
-    pointer: project.projectMetadata.pointer,
+    protocol: projectProtocol,
+    pointer: projectPointer,
     id: projectId,
   };
   storage.add(cacheKey, JSON.stringify(ret));
@@ -199,7 +210,7 @@ export const fetchGrantData =
     const addresses = { projectRegistry: registryAddress };
     const appProvider = getProviderByChainId(chainID);
 
-    let project: ProjectRegistryMetadata;
+    let project;
 
     try {
       project = await getProjectById(id, addresses, appProvider!);
@@ -210,7 +221,14 @@ export const fetchGrantData =
       return;
     }
 
-    if (!project.projectMetadata.protocol) {
+    const projectProtocol = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+      ? project.projectMetadata.protocol
+      : project.metadata.protocol;
+    const projectPointer = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+      ? project.projectMetadata.pointer
+      : project.metadata.pointer;
+
+    if (!projectProtocol) {
       console.error("project not found");
       dispatch(grantMetadataFetchingError(id, "project not found"));
       return;
@@ -219,7 +237,7 @@ export const fetchGrantData =
     dispatch(grantMetadataLoading(id));
 
     try {
-      const cacheKey = `project-${id}-${project.projectMetadata.protocol}-${project.projectMetadata.pointer}`;
+      const cacheKey = `project-${id}-${projectProtocol}-${projectPointer}`;
       const { projects } = getState();
       const { createdAtBlock, updatedAtBlock } = projects.events[id] || {};
 

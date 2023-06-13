@@ -130,7 +130,9 @@ const fetchProjectCreatedUpdatedEvents = async (
   account: string
 ) => {
   const addresses = addressesByChainID(chainID!);
-
+  const projectRegistryAddress = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+    ? addresses.newProjectRegistry
+    : addresses.projectRegistry;
   const appProvider = getProviderByChainId(chainID);
 
   // FIXME: use contract filters when fantom bug is fixed
@@ -142,9 +144,11 @@ const fetchProjectCreatedUpdatedEvents = async (
 
   // FIXME: use this line when the fantom RPC bug has been fixed
   // const createdFilter = contract.filters.ProjectCreated(null, account) as any;
-  const createdEventSig = ethers.utils.id("ProjectCreated(bytes32,address)");
+  const createdEventSig = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+    ? ethers.utils.id("ProjectCreated(bytes32,address)")
+    : ethers.utils.id("ProjectCreated(uint256,address)");
   const createdFilter = {
-    address: addresses.projectRegistry,
+    address: projectRegistryAddress,
     fromBlock: "0x00",
     toBlock: "latest",
     topics: [createdEventSig, null, ethers.utils.hexZeroPad(account, 32)],
@@ -161,7 +165,7 @@ const fetchProjectCreatedUpdatedEvents = async (
 
   // FIXME: remove when the fantom RPC bug has been fixed
   createdEvents = createdEvents.filter(
-    (e) => e.address === addresses.projectRegistry
+    (e) => e.address === projectRegistryAddress
   );
 
   if (createdEvents.length === 0) {
@@ -174,11 +178,11 @@ const fetchProjectCreatedUpdatedEvents = async (
 
   // FIXME: use this line when the fantom RPC bug has been fixed
   // const ids = createdEvents.map((event) => event.args!.projectID!);
-  const ids = createdEvents.map((event) => event.topics[1]);
+  const ids = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+    ? createdEvents.map((event) => event.topics[1])
+    : createdEvents.map((event) => parseInt(event.topics[1], 16));
 
-  const fullIds = ids.map(
-    (id) => `${chainID}:${addresses.projectRegistry}:${id}`
-  );
+  const fullIds = ids.map((id) => `${chainID}:${projectRegistryAddress}:${id}`);
 
   // FIXME: use this line when the fantom RPC bug has been fixed
   // const hexIDs = createdEvents.map((event) =>
@@ -195,7 +199,7 @@ const fetchProjectCreatedUpdatedEvents = async (
     "MetadataUpdated(uint256,(uint256,string))"
   );
   const updatedFilter = {
-    address: addresses.projectRegistry,
+    address: projectRegistryAddress,
     fromBlock: "0x00",
     toBlock: "latest",
     topics: [updatedEventSig, hexIDs],
@@ -210,7 +214,7 @@ const fetchProjectCreatedUpdatedEvents = async (
 
   // FIXME: remove when the fantom RPC bug has been fixed
   updatedEvents = updatedEvents.filter(
-    (e) => e.address === addresses.projectRegistry
+    (e) => e.address === projectRegistryAddress
   );
 
   return {
@@ -226,13 +230,19 @@ export const extractProjectEvents = (
   chainID: number
 ) => {
   const chainAddresses = addressesByChainID(chainID);
+  const projectRegistryAddress = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+    ? chainAddresses.newProjectRegistry
+    : chainAddresses.projectRegistry;
   const eventList: { [key: string]: ProjectEvents } = {};
   const projectEventsMap: ProjectEventsMap = {};
 
   createdEvents.forEach((createEvent) => {
     // FIXME: use this line when the fantom RPC bug has been fixed (update line to work with new project id format)
     // const id = createEvent.args!.projectID!;
-    const id = `${chainID}:${chainAddresses.projectRegistry}:${createEvent.topics[1]}`;
+    const projectId = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+      ? createEvent.topics[1]
+      : parseInt(createEvent.topics[1], 16);
+    const id = `${chainID}:${projectRegistryAddress}:${projectId}`;
 
     // eslint-disable-next-line no-param-reassign
     eventList[id] = {
@@ -248,10 +258,10 @@ export const extractProjectEvents = (
   updatedEvents.forEach((updateEvent) => {
     // FIXME: use this line when the fantom RPC bug has been fixed (update line to work with new project id format)
     // const id = BigNumber.from(updateEvent.args!.projectID!).toNumber();
-    const id = `${chainID}:${chainAddresses.projectRegistry}:${parseInt(
-      updateEvent.topics[1],
-      16
-    )}`;
+    const projectId = process.env.REACT_APP_DIRECT_GRANTS_ENABLED
+      ? updateEvent.topics[1]
+      : parseInt(updateEvent.topics[1], 16);
+    const id = `${chainID}:${projectRegistryAddress}:${projectId}`;
     if (eventList[id] !== undefined) {
       // eslint-disable-next-line no-param-reassign
       eventList[id].updatedAtBlock = updateEvent.blockNumber;
@@ -412,10 +422,14 @@ export const fetchProjectApplications =
       web3Provider.chains.map(async (chain: { id: number }) => {
         try {
           const addresses = addressesByChainID(projectChainId);
+          const projectRegistryAddress = process.env
+            .REACT_APP_DIRECT_GRANTS_ENABLED
+            ? addresses.newProjectRegistry
+            : addresses.projectRegistry;
           const projectApplicationID = generateUniqueRoundApplicationID(
             projectChainId,
             projectID,
-            addresses.projectRegistry!
+            projectRegistryAddress!
           );
 
           const response: any = await graphqlFetch(

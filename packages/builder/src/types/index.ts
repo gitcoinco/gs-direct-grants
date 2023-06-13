@@ -40,6 +40,15 @@ export interface Project {
   createdAt?: number;
 }
 
+// TODO: Remove this type since it wont be necessary
+// once REACT_APP_DIRECT_GRANTS_ENABLED feature flag is tested
+export type FormerProjectRegistryMetadata = {
+  metadata: {
+    protocol: number;
+    pointer: string;
+  };
+};
+
 export type ProjectRegistryMetadata = {
   projectMetadata: {
     protocol: number;
