@@ -153,9 +153,7 @@ export const publishGrant =
           grantId,
           projectMetadata
         );
-      } else {
-        // brand new Project
-        if (process.env.REACT_APP_DIRECT_GRANTS_ENABLED) {
+      } else if (process.env.REACT_APP_DIRECT_GRANTS_ENABLED) {
           const nullMetadata = {
             protocol: 0,
             pointer: metadataCID,
@@ -165,9 +163,8 @@ export const publishGrant =
             projectMetadata,
             nullMetadata
           );
-        } else {
-          projectTx = await projectRegistry.createProject(projectMetadata);
-        }
+      } else {
+        projectTx = await projectRegistry.createProject(projectMetadata);
       }
     } catch (e) {
       datadogRum.addError(e);
