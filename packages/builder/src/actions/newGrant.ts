@@ -154,15 +154,15 @@ export const publishGrant =
           projectMetadata
         );
       } else if (process.env.REACT_APP_DIRECT_GRANTS_ENABLED) {
-          const nullMetadata = {
-            protocol: 0,
-            pointer: metadataCID,
-          };
-          projectTx = await projectRegistry.createProject(
-            [account],
-            projectMetadata,
-            nullMetadata
-          );
+        const nullMetadata = {
+          protocol: 0,
+          pointer: metadataCID,
+        };
+        projectTx = await projectRegistry.createProject(
+          [account],
+          projectMetadata,
+          nullMetadata
+        );
       } else {
         projectTx = await projectRegistry.createProject(projectMetadata);
       }
