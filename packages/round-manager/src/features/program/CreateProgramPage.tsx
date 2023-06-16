@@ -190,7 +190,9 @@ export default function CreateProgram() {
               className="grid grid-cols-1 gap-4 sm:items-start shadow-sm text-grey-500"
               onSubmit={handleSubmit(onSubmit)}
             >
+              {/* Form inputs */}
               <div className="grid grid-cols-1 gap-4 sm:items-start pt-7 pb-3.5 sm:px-6 bg-white">
+                {/* program name & chain */}
                 <div className="sm:flex sm:flex-rows gap-4">
                   <div className="sm:basis-1/2">
                     <label htmlFor="name" className="block text-sm">
@@ -239,7 +241,7 @@ export default function CreateProgram() {
                     </div>
                   </div>
                 </div>
-
+                {/* Operator Wallets */}
                 <div>
                   <p className="text-grey-400 text-sm mb-4">Add Operator(s)</p>
                   <label htmlFor="operators" className="block text-sm">

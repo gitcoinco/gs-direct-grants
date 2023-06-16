@@ -2,6 +2,7 @@ import {
   ProgressStatus,
   ProjectRequirements,
   Round,
+  RoundCategory,
   StorageProtocolID,
 } from "../../features/api/types";
 import React, {
@@ -12,13 +13,18 @@ import React, {
 } from "react";
 import { saveToIPFS } from "../../features/api/ipfs";
 import { useWallet } from "../../features/common/Auth";
-import { deployRoundContract } from "../../features/api/round";
+import {
+  deployRoundContract,
+  deployRoundContractV2,
+} from "../../features/api/round";
 import { waitForSubgraphSyncTo } from "../../features/api/subgraph";
 import { SchemaQuestion } from "../../features/api/utils";
 import { datadogLogs } from "@datadog/browser-logs";
 import { Signer } from "@ethersproject/abstract-signer";
 import { deployQFVotingContract } from "../../features/api/votingStrategy/qfVotingStrategy";
 import { deployMerklePayoutStrategyContract } from "../../features/api/payoutStrategy/merklePayoutStrategy";
+import { registryFactoryContract } from "../../features/api/contracts";
+import { RegistryFactory__factory } from "../../types/generated/typechain";
 
 type SetStatusFn = React.Dispatch<SetStateAction<ProgressStatus>>;
 
@@ -31,6 +37,8 @@ export interface CreateRoundState {
   setPayoutContractDeploymentStatus: SetStatusFn;
   roundContractDeploymentStatus: ProgressStatus;
   setRoundContractDeploymentStatus: SetStatusFn;
+  directRoundContractDeploymentStatus: ProgressStatus;
+  setDirectRoundContractDeploymentStatus: SetStatusFn;
   indexingStatus: ProgressStatus;
   setIndexingStatus: SetStatusFn;
 }
@@ -46,6 +54,7 @@ export type CreateRoundData = {
     };
   };
   round: Round;
+  roundCategory: RoundCategory;
 };
 
 export const initialCreateRoundState: CreateRoundState = {
@@ -65,6 +74,11 @@ export const initialCreateRoundState: CreateRoundState = {
   setRoundContractDeploymentStatus: () => {
     /* provided in CreateRoundProvider */
   },
+  directRoundContractDeploymentStatus: ProgressStatus.NOT_STARTED,
+  setDirectRoundContractDeploymentStatus: () => {
+    /* provided in CreateRoundProvider */
+  },
+
   indexingStatus: ProgressStatus.NOT_STARTED,
   setIndexingStatus: () => {
     /* provided in CreateRoundProvider */
@@ -89,6 +103,10 @@ export const CreateRoundProvider = ({
     useState(initialCreateRoundState.payoutContractDeploymentStatus);
   const [roundContractDeploymentStatus, setRoundContractDeploymentStatus] =
     useState(initialCreateRoundState.roundContractDeploymentStatus);
+  const [
+    directRoundContractDeploymentStatus,
+    setDirectRoundContractDeploymentStatus,
+  ] = useState(initialCreateRoundState.directRoundContractDeploymentStatus);
   const [indexingStatus, setIndexingStatus] = useState(
     initialCreateRoundState.indexingStatus
   );
@@ -102,6 +120,8 @@ export const CreateRoundProvider = ({
     setPayoutContractDeploymentStatus,
     roundContractDeploymentStatus,
     setRoundContractDeploymentStatus,
+    directRoundContractDeploymentStatus,
+    setDirectRoundContractDeploymentStatus,
     indexingStatus,
     setIndexingStatus,
   };
@@ -129,20 +149,26 @@ const _createRound = async ({
     setVotingContractDeploymentStatus,
     setPayoutContractDeploymentStatus,
     setRoundContractDeploymentStatus,
+    setDirectRoundContractDeploymentStatus,
     setIndexingStatus,
   } = context;
   const {
     roundMetadataWithProgramContractAddress,
     applicationQuestions,
     round,
+    roundCategory,
   } = createRoundData;
   try {
     datadogLogs.logger.info(`_createRound: ${round}`);
 
-    if (roundMetadataWithProgramContractAddress && roundMetadataWithProgramContractAddress.eligibility) {
-      roundMetadataWithProgramContractAddress.eligibility.requirements = roundMetadataWithProgramContractAddress.eligibility?.requirements.filter(
-        obj => obj.requirement != ""
-      );
+    if (
+      roundMetadataWithProgramContractAddress &&
+      roundMetadataWithProgramContractAddress.eligibility
+    ) {
+      roundMetadataWithProgramContractAddress.eligibility.requirements =
+        roundMetadataWithProgramContractAddress.eligibility?.requirements.filter(
+          (obj) => obj.requirement != ""
+        );
     }
 
     const { roundMetadataIpfsHash, applicationSchemaIpfsHash } =
@@ -164,35 +190,48 @@ const _createRound = async ({
       },
     };
 
-    const votingContractAddress = await handleDeployVotingContract(
-      setVotingContractDeploymentStatus,
-      signerOrProvider
-    );
+    let transactionBlockNumber: number;
+    if (roundCategory === RoundCategory.QuadraticFunding) {
+      const votingContractAddress = await handleDeployVotingContract(
+        setVotingContractDeploymentStatus,
+        signerOrProvider
+      );
 
-    const payoutContractAddress = await handleDeployPayoutContract(
-      setPayoutContractDeploymentStatus,
-      signerOrProvider
-    );
+      const payoutContractAddress = await handleDeployPayoutContract(
+        setPayoutContractDeploymentStatus,
+        signerOrProvider
+      );
 
-    const roundContractInputsWithContracts = {
-      ...roundContractInputsWithPointers,
-      votingStrategy: votingContractAddress,
-      payoutStrategy: {
-        id: payoutContractAddress,
-        isReadyForPayout: false,
-      },
-    };
+      const roundContractInputsWithContracts = {
+        ...roundContractInputsWithPointers,
+        votingStrategy: votingContractAddress,
+        payoutStrategy: {
+          id: payoutContractAddress,
+          isReadyForPayout: false,
+        },
+      };
 
-    const transactionBlockNumber = await handleDeployRoundContract(
-      setRoundContractDeploymentStatus,
-      roundContractInputsWithContracts,
-      signerOrProvider
-    );
+      transactionBlockNumber = await handleDeployRoundContract(
+        setRoundContractDeploymentStatus,
+        roundContractInputsWithContracts,
+        signerOrProvider
+      );
+    } else {
+      const programId =
+        roundMetadataWithProgramContractAddress.programContractAddress;
+      transactionBlockNumber = await handleDeployRoundContractV2(
+        programId,
+        setDirectRoundContractDeploymentStatus,
+        roundContractInputsWithPointers,
+        signerOrProvider
+      );
+    }
 
     await waitForSubgraphToUpdate(
       setIndexingStatus,
       signerOrProvider,
-      transactionBlockNumber
+      transactionBlockNumber,
+      roundCategory
     );
   } catch (error) {
     datadogLogs.logger.error(
@@ -214,6 +253,7 @@ export const useCreateRound = () => {
     setVotingContractDeploymentStatus,
     setPayoutContractDeploymentStatus,
     setRoundContractDeploymentStatus,
+    setDirectRoundContractDeploymentStatus,
     setIndexingStatus,
   } = context;
   const { signer: walletSigner } = useWallet();
@@ -224,6 +264,7 @@ export const useCreateRound = () => {
       setVotingContractDeploymentStatus,
       setPayoutContractDeploymentStatus,
       setRoundContractDeploymentStatus,
+      setDirectRoundContractDeploymentStatus,
       setIndexingStatus
     );
 
@@ -240,6 +281,8 @@ export const useCreateRound = () => {
     votingContractDeploymentStatus: context.votingContractDeploymentStatus,
     payoutContractDeploymentStatus: context.payoutContractDeploymentStatus,
     roundContractDeploymentStatus: context.roundContractDeploymentStatus,
+    directRoundContractDeploymentStatus:
+      context.directRoundContractDeploymentStatus,
     indexingStatus: context.indexingStatus,
   };
 };
@@ -249,6 +292,7 @@ function resetToInitialState(
   setVotingDeployingStatus: SetStatusFn,
   setPayoutDeployingStatus: SetStatusFn,
   setDeployingStatus: SetStatusFn,
+  setDeployingStatusV2: SetStatusFn,
   setIndexingStatus: SetStatusFn
 ): void {
   setStoringStatus(initialCreateRoundState.IPFSCurrentStatus);
@@ -259,6 +303,9 @@ function resetToInitialState(
     initialCreateRoundState.payoutContractDeploymentStatus
   );
   setDeployingStatus(initialCreateRoundState.roundContractDeploymentStatus);
+  setDeployingStatusV2(
+    initialCreateRoundState.directRoundContractDeploymentStatus
+  );
   setIndexingStatus(initialCreateRoundState.indexingStatus);
 }
 
@@ -360,16 +407,46 @@ async function handleDeployRoundContract(
   }
 }
 
+async function handleDeployRoundContractV2(
+  programId: string,
+  setDeploymentStatus: SetStatusFn,
+  round: Round,
+  signerOrProvider: Signer
+): Promise<number> {
+  try {
+    setDeploymentStatus(ProgressStatus.IN_PROGRESS);
+    const { transactionBlockNumber } = await deployRoundContractV2(
+      programId,
+      round,
+      signerOrProvider
+    );
+
+    setDeploymentStatus(ProgressStatus.IS_SUCCESS);
+
+    return transactionBlockNumber;
+  } catch (error) {
+    console.error("handleDeployRoundContract", error);
+    setDeploymentStatus(ProgressStatus.IS_ERROR);
+    throw error;
+  }
+}
+
 async function waitForSubgraphToUpdate(
   setIndexingStatus: SetStatusFn,
   signerOrProvider: Signer,
-  transactionBlockNumber: number
+  transactionBlockNumber: number,
+  roundCategory?: RoundCategory
 ) {
   try {
     setIndexingStatus(ProgressStatus.IN_PROGRESS);
 
     const chainId = await signerOrProvider.getChainId();
-    await waitForSubgraphSyncTo(chainId, transactionBlockNumber);
+    await waitForSubgraphSyncTo(
+      chainId,
+      transactionBlockNumber,
+      1000,
+      roundCategory
+    );
 
     setIndexingStatus(ProgressStatus.IS_SUCCESS);
   } catch (error) {

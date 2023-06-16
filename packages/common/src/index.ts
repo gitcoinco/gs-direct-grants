@@ -2,6 +2,7 @@ import { useParams } from "react-router";
 import useSWR from "swr";
 import { isAddress } from "viem";
 import { useMemo, useState } from "react";
+import { RoundCategory } from "../../round-manager/src/features/api/types";
 
 export * from "./icons";
 export * from "./markdown";
@@ -140,7 +141,10 @@ export type Payout = {
   createdAt: string;
 };
 
-const getGraphQLEndpoint = async (chainId: ChainId) => {
+const getGraphQLEndpoint = async (
+  chainId: ChainId,
+  roundCategory?: RoundCategory
+) => {
   switch (chainId) {
     case ChainId.MAINNET:
       return `${process.env.REACT_APP_SUBGRAPH_MAINNET_API}`;
@@ -156,7 +160,10 @@ const getGraphQLEndpoint = async (chainId: ChainId) => {
 
     case ChainId.GOERLI_CHAIN_ID:
     default:
-      return `${process.env.REACT_APP_SUBGRAPH_GOERLI_API}`;
+      return roundCategory == RoundCategory.Direct
+        ? // hardcoding this here to avoid having to create a new env var when the feature flag is enabled
+          "https://api.thegraph.com/subgraphs/name/lmcorbalan/gc-rounds"
+        : `${process.env.REACT_APP_SUBGRAPH_GOERLI_API}`;
   }
 };
 
@@ -174,9 +181,10 @@ export const graphql_fetch = async (
   chainId: ChainId,
   // eslint-disable-next-line @typescript-eslint/ban-types
   variables: object = {},
-  fromProjectRegistry = false
+  fromProjectRegistry = false,
+  roundCategory?: RoundCategory
 ) => {
-  let endpoint = await getGraphQLEndpoint(chainId);
+  let endpoint = await getGraphQLEndpoint(chainId, roundCategory);
 
   if (fromProjectRegistry) {
     endpoint = endpoint.replace("grants-round", "grants-hub");
@@ -363,43 +371,45 @@ export const RedstoneTokenIds: Record<string, string> = {
   ETH: "ETH",
 };
 
-export const useTokenPrice = (tokenId: string|undefined) => {
+export const useTokenPrice = (tokenId: string | undefined) => {
   const [tokenPrice, setTokenPrice] = useState<number>();
   const [error, setError] = useState<Response | undefined>();
   const [loading, setLoading] = useState(false);
 
-  if (!tokenId) return {
-    data: 0,
-    error,
-    loading,
-  };
+  if (!tokenId)
+    return {
+      data: 0,
+      error,
+      loading,
+    };
 
   useMemo(async () => {
     setLoading(true);
 
     const tokenPriceEndpoint = `https://api.redstone.finance/prices?symbol=${tokenId}&provider=redstone&limit=1`;
-    fetch(tokenPriceEndpoint).then(resp => {
-      if (resp.ok) {
-        return resp.json();
-      } else {
-        setError(resp);
+    fetch(tokenPriceEndpoint)
+      .then((resp) => {
+        if (resp.ok) {
+          return resp.json();
+        } else {
+          setError(resp);
+          setLoading(false);
+        }
+      })
+      .then((data) => {
+        if (data) {
+          setTokenPrice(data[0].value);
+        } else {
+          setError(data);
+        }
+
         setLoading(false);
-      }
-    }).then(data => {
-
-      if (data) {
-        setTokenPrice(data[0].value);
-      } else {
-        setError(data);
-      }
-
-      setLoading(false);
-    }).catch((err) => {
-      console.log("error fetching token price", { err });
-      setError(err);
-      setLoading(false);
-    });
-
+      })
+      .catch((err) => {
+        console.log("error fetching token price", { err });
+        setError(err);
+        setLoading(false);
+      });
   }, [tokenId]);
 
   return {

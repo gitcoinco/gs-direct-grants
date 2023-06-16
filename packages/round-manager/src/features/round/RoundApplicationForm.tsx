@@ -19,6 +19,7 @@ import {
   ProgressStatus,
   ProjectRequirements,
   Round,
+  RoundCategory,
 } from "../api/types";
 import {
   generateApplicationSchema,
@@ -34,7 +35,7 @@ import InfoModal from "../common/InfoModal";
 import { InputIcon } from "../common/InputIcon";
 import PreviewQuestionModal from "../common/PreviewQuestionModal";
 import ProgressModal from "../common/ProgressModal";
-import _ from 'lodash';
+import _ from "lodash";
 
 const payoutQuestion: SchemaQuestion = {
   id: 0,
@@ -45,7 +46,7 @@ const payoutQuestion: SchemaQuestion = {
   type: "address",
 };
 
-export const initialQuestions: SchemaQuestion[] = [
+export const initialQuestionsQF: SchemaQuestion[] = [
   {
     id: 1,
     title: "Email Address",
@@ -69,6 +70,43 @@ export const initialQuestions: SchemaQuestion[] = [
     encrypted: false,
     hidden: false,
     type: "number",
+  },
+];
+
+export const initialQuestionsDirect: SchemaQuestion[] = [
+  ...initialQuestionsQF,
+  {
+    id: 4,
+    title: "Milestones",
+    required: true,
+    encrypted: false,
+    hidden: false,
+    type: "paragraph",
+  },
+  {
+    id: 5,
+    title: "Amount requested",
+    required: true,
+    encrypted: false,
+    hidden: true,
+    type: "number",
+  },
+  {
+    id: 6,
+    title: "Payout token",
+    required: true,
+    encrypted: false,
+    hidden: true,
+    type: "dropdown",
+    choices: ["ETH", "DAI"],
+  },
+  {
+    id: 7,
+    title: "Payout wallet address",
+    required: true,
+    encrypted: false,
+    hidden: true,
+    type: "address",
   },
 ];
 
@@ -96,6 +134,7 @@ export function RoundApplicationForm(props: {
     program: Program;
   };
   stepper: typeof FS;
+  configuration?: { roundCategory?: RoundCategory };
 }) {
   const [openProgressModal, setOpenProgressModal] = useState(false);
   const [openPreviewModal, setOpenPreviewModal] = useState(false);
@@ -114,9 +153,15 @@ export function RoundApplicationForm(props: {
 
   const navigate = useNavigate();
 
+  const roundCategory =
+    props.configuration?.roundCategory || RoundCategory.QuadraticFunding;
+
   const defaultQuestions: ApplicationMetadata["questions"] =
     // @ts-expect-error TODO: either fix this or refactor the whole formstepper
-    formData?.applicationMetadata?.questions ?? initialQuestions;
+    formData?.applicationMetadata?.questions ??
+    roundCategory == RoundCategory.QuadraticFunding
+      ? initialQuestionsQF
+      : initialQuestionsDirect;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { control, handleSubmit, register, getValues } = useForm<Round>({
@@ -143,16 +188,24 @@ export function RoundApplicationForm(props: {
     votingContractDeploymentStatus,
     payoutContractDeploymentStatus,
     roundContractDeploymentStatus,
+    directRoundContractDeploymentStatus,
     indexingStatus,
   } = useCreateRound();
 
+  /**
+   * Redirects to the program details page after a successful round creation.
+   */
   useEffect(() => {
     const isSuccess =
-      IPFSCurrentStatus === ProgressStatus.IS_SUCCESS &&
-      votingContractDeploymentStatus === ProgressStatus.IS_SUCCESS &&
-      payoutContractDeploymentStatus === ProgressStatus.IS_SUCCESS &&
-      roundContractDeploymentStatus === ProgressStatus.IS_SUCCESS &&
-      indexingStatus === ProgressStatus.IS_SUCCESS;
+      roundCategory == RoundCategory.QuadraticFunding
+        ? IPFSCurrentStatus === ProgressStatus.IS_SUCCESS &&
+          votingContractDeploymentStatus === ProgressStatus.IS_SUCCESS &&
+          payoutContractDeploymentStatus === ProgressStatus.IS_SUCCESS &&
+          roundContractDeploymentStatus === ProgressStatus.IS_SUCCESS &&
+          indexingStatus === ProgressStatus.IS_SUCCESS
+        : IPFSCurrentStatus === ProgressStatus.IS_SUCCESS &&
+          directRoundContractDeploymentStatus === ProgressStatus.IS_SUCCESS &&
+          indexingStatus === ProgressStatus.IS_SUCCESS;
 
     if (isSuccess) {
       redirectToProgramDetails(navigate, 2000, programId);
@@ -165,8 +218,13 @@ export function RoundApplicationForm(props: {
     indexingStatus,
     programId,
     navigate,
+    roundCategory,
+    directRoundContractDeploymentStatus,
   ]);
 
+  /**
+   * Redirects to the program details page after an error in round creation.
+   */
   useEffect(() => {
     if (
       IPFSCurrentStatus === ProgressStatus.IS_ERROR ||
@@ -227,16 +285,17 @@ export function RoundApplicationForm(props: {
         roundMetadataWithProgramContractAddress,
         applicationQuestions,
         round,
+        roundCategory,
       });
     } catch (error) {
       datadogLogs.logger.error(
-        `error: RoundApplcationForm next - ${error}, programId - ${programId}`
+        `error: RoundApplicationForm next - ${error}, programId - ${programId}`
       );
-      console.error("RoundApplcationForm", error);
+      console.error("RoundApplicationForm", error);
     }
   };
 
-  const progressSteps = [
+  const progressStepsQF = [
     {
       name: "Storing",
       description: "The metadata is being saved in a safe place.",
@@ -256,6 +315,32 @@ export function RoundApplicationForm(props: {
       name: "Deploying",
       description: "The round contract is being deployed.",
       status: roundContractDeploymentStatus,
+    },
+    {
+      name: "Indexing",
+      description: "The subgraph is indexing the data.",
+      status: indexingStatus,
+    },
+    {
+      name: "Redirecting",
+      description: "Just another moment while we finish things up.",
+      status:
+        indexingStatus === ProgressStatus.IS_SUCCESS
+          ? ProgressStatus.IN_PROGRESS
+          : ProgressStatus.NOT_STARTED,
+    },
+  ];
+
+  const progressStepsDirect = [
+    {
+      name: "Storing",
+      description: "The metadata is being saved in a safe place.",
+      status: IPFSCurrentStatus,
+    },
+    {
+      name: "Deploying",
+      description: "The direct round contract is being deployed.",
+      status: directRoundContractDeploymentStatus,
     },
     {
       name: "Indexing",
@@ -306,7 +391,7 @@ export function RoundApplicationForm(props: {
   const formSubmitModals = () => (
     <InfoModal
       title={"Heads up!"}
-      body={<InfoModalBody />}
+      body={<InfoModalBody roundCategory={roundCategory} />}
       isOpen={openHeadsUpModal}
       setIsOpen={setOpenHeadsUpModal}
       continueButtonAction={() => {
@@ -316,7 +401,11 @@ export function RoundApplicationForm(props: {
       <ProgressModal
         isOpen={openProgressModal}
         subheading={"Please hold while we create your Grant Round."}
-        steps={progressSteps}
+        steps={
+          roundCategory == RoundCategory.QuadraticFunding
+            ? (progressStepsQF as any)
+            : progressStepsDirect
+        }
       >
         <ErrorModal
           isOpen={openErrorModal}
@@ -684,8 +773,14 @@ const Box = ({
   </div>
 );
 
-function InfoModalBody() {
-  return (
+function InfoModalBody({ roundCategory }: { roundCategory: RoundCategory }) {
+  return roundCategory == RoundCategory.Direct ? (
+    <div className="text-sm text-grey-400 gap-16">
+      <p className="text-sm">
+        You need to sign a transaction to deploy the round smart contract.
+      </p>
+    </div>
+  ) : (
     <div className="text-sm text-grey-400 gap-16">
       <p className="text-sm">
         Each grant round on the protocol requires three smart contracts.

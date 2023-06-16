@@ -4,7 +4,7 @@ import {
   render,
   screen,
   waitFor,
-  within
+  within,
 } from "@testing-library/react";
 import { randomInt } from "crypto";
 import { act } from "react-dom/test-utils";
@@ -12,7 +12,7 @@ import { MemoryRouter } from "react-router-dom";
 import {
   CreateRoundContext,
   CreateRoundState,
-  initialCreateRoundState
+  initialCreateRoundState,
 } from "../../../context/round/CreateRoundContext";
 import { saveToIPFS } from "../../api/ipfs";
 import { deployMerklePayoutStrategyContract } from "../../api/payoutStrategy/merklePayoutStrategy";
@@ -24,8 +24,8 @@ import { useWallet } from "../../common/Auth";
 import { FormStepper } from "../../common/FormStepper";
 import { FormContext } from "../../common/FormWizard";
 import {
-  initialQuestions,
-  RoundApplicationForm
+  initialQuestionsQF,
+  RoundApplicationForm,
 } from "../RoundApplicationForm";
 
 jest.mock("../../api/ipfs");
@@ -293,7 +293,7 @@ describe("Application Form Builder", () => {
 
   describe("Edit question", () => {
     it("displays edit icons for each editable question", () => {
-      const editableQuestions = initialQuestions;
+      const editableQuestions = initialQuestionsQF;
 
       renderWithContext(
         <RoundApplicationForm
@@ -313,7 +313,7 @@ describe("Application Form Builder", () => {
     });
 
     it("enters editable state showing current title for that question when edit is clicked on that question", () => {
-      const editableQuestions = initialQuestions;
+      const editableQuestions = initialQuestionsQF;
       const questionIndex = randomInt(0, editableQuestions.length);
 
       renderWithContext(
@@ -336,7 +336,7 @@ describe("Application Form Builder", () => {
     });
 
     it("when in edit mode, saves input as question when save is clicked on that question and reverts to default ui", async () => {
-      const questionIndex = randomInt(0, initialQuestions.length);
+      const questionIndex = randomInt(0, initialQuestionsQF.length);
       const newTitle = faker.lorem.sentence();
 
       renderWithContext(
@@ -372,7 +372,7 @@ describe("Application Form Builder", () => {
 
   describe("Encrypted toggle", () => {
     it("displays toggle for encryption option for each editable question", () => {
-      const editableQuestions = initialQuestions;
+      const editableQuestions = initialQuestionsQF;
 
       renderWithContext(
         <RoundApplicationForm
@@ -404,7 +404,7 @@ describe("Application Form Builder", () => {
         />
       );
 
-      for (let i = 0; i < initialQuestions.length; i++) {
+      for (let i = 0; i < initialQuestionsQF.length; i++) {
         const editIcons = screen.getAllByTestId("edit-question");
         fireEvent.click(editIcons[i]);
         const encryptionToggles = screen.getAllByTestId("encrypted-toggle");
@@ -415,9 +415,7 @@ describe("Application Form Builder", () => {
         fireEvent.click(save);
       }
 
-      const encryptionToggleLabels = screen.getAllByText(
-        "Encrypted"
-      );
+      const encryptionToggleLabels = screen.getAllByText("Encrypted");
 
       expect(encryptionToggleLabels.length).toBe(1);
     });
@@ -425,7 +423,7 @@ describe("Application Form Builder", () => {
 
   describe("Required toggle", () => {
     it("displays *Required for required option for each editable question", () => {
-      const editableQuestions = initialQuestions;
+      const editableQuestions = initialQuestionsQF;
       renderWithContext(
         <RoundApplicationForm
           initialData={{
@@ -469,7 +467,7 @@ describe("Application Form Builder", () => {
       // 7. Email Required
       // 8. Funding Source Required
       // 9. Team Size Required
-      for (let i = 0; i < initialQuestions.length; i++) {
+      for (let i = 0; i < initialQuestionsQF.length; i++) {
         const editIcons = screen.getAllByTestId("edit-question");
         fireEvent.click(editIcons[i]);
         const requiredToggles = screen.getAllByTestId("required-toggle");
@@ -493,9 +491,7 @@ describe("Application Form Builder", () => {
       // 8. Funding Source Optional
       // 9. Team Size Optional
 
-      const requiredToggleLabels = screen.getAllByText(
-        "*Required"
-      );
+      const requiredToggleLabels = screen.getAllByText("*Required");
 
       expect(requiredToggleLabels.length).toBe(4);
     });
@@ -503,7 +499,7 @@ describe("Application Form Builder", () => {
 
   describe("Remove question", () => {
     it("displays remove icon for each editable question", () => {
-      const editableQuestions = initialQuestions;
+      const editableQuestions = initialQuestionsQF;
       renderWithContext(
         <RoundApplicationForm
           initialData={{
@@ -522,7 +518,7 @@ describe("Application Form Builder", () => {
     });
 
     it("removes question when remove icon is clicked", () => {
-      const editableQuestions = initialQuestions;
+      const editableQuestions = initialQuestionsQF;
 
       const indexToBeRemoved = randomInt(0, 3);
 
@@ -573,7 +569,7 @@ describe("Application Form Builder", () => {
     });
 
     it("adds a new question on clicking add a new question button", async () => {
-      const editableQuestions = initialQuestions;
+      const editableQuestions = initialQuestionsQF;
       const newTitle = "New Question";
 
       renderWithContext(
@@ -604,7 +600,7 @@ describe("Application Form Builder", () => {
 
       selectList = screen.getByTestId("select-question");
 
-      const selectType = within(selectList).getAllByText("Paragraph")
+      const selectType = within(selectList).getAllByText("Paragraph");
       fireEvent.click(selectType[0]);
 
       const inputField = screen.getByTestId("question-title-input");
