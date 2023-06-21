@@ -7,7 +7,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { classNames } from "common";
 import { Input } from "common/src/styles";
 import _ from "lodash";
-import moment, { Moment } from "moment";
+import moment from "moment";
 import { Fragment, useContext, useState } from "react";
 import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
@@ -29,7 +29,6 @@ import { SupportType } from "../api/utils";
 import { FormStepper } from "../common/FormStepper";
 import { FormContext } from "../common/FormWizard";
 import { utils } from "ethers";
-import { maxDate } from "../../constants";
 
 export const RoundValidationSchema = yup.object().shape({
   roundMetadata: yup.object({
