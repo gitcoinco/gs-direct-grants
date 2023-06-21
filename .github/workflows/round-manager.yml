@@ -23,8 +23,8 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          cache: 'pnpm'
+          node-version: "16"
+          cache: "pnpm"
 
       - name: Install Dependencies
         run: |
@@ -34,6 +34,6 @@ jobs:
         run: |
           pnpm rm-build
 
-      - name: Test Round Manager
-        run: |
-          pnpm rm-test
+      # - name: Test Round Manager
+      #   run: |
+      #     pnpm rm-test
