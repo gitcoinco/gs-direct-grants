@@ -124,6 +124,7 @@ export const RoundValidationSchema = yup.object().shape({
       is: false,
       then: yup
         .date()
+        .nullable()
         .required("This field is required.")
         .min(
           yup.ref("roundStartTime"),
@@ -528,7 +529,7 @@ export function RoundDetailForm(props: RoundDetailFormProps) {
                                   // for direct round, when date is empty it will be set to maxDate
                                   setValue(
                                     "roundEndTime",
-                                    "" as unknown as Date
+                                    null as unknown as Date
                                   );
                                 }
                               }}

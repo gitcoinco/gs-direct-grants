@@ -37,16 +37,16 @@ import PreviewQuestionModal from "../common/PreviewQuestionModal";
 import ProgressModal from "../common/ProgressModal";
 import _ from "lodash";
 
-const payoutQuestion: SchemaQuestion = {
-  id: 0,
-  title: "Payout Wallet Address",
-  required: true,
-  encrypted: false,
-  hidden: true,
-  type: "address",
-};
-
 export const initialQuestionsQF: SchemaQuestion[] = [
+  {
+    id: 0,
+    title: "Payout Wallet Address",
+    required: true,
+    encrypted: false,
+    hidden: true,
+    type: "address",
+    fixed: true,
+  },
   {
     id: 1,
     title: "Email Address",
@@ -74,39 +74,76 @@ export const initialQuestionsQF: SchemaQuestion[] = [
 ];
 
 export const initialQuestionsDirect: SchemaQuestion[] = [
-  ...initialQuestionsQF,
   {
-    id: 4,
-    title: "Milestones",
+    id: 0,
+    title: "Payout Wallet Address",
     required: true,
     encrypted: false,
-    hidden: false,
-    type: "paragraph",
+    hidden: true,
+    type: "address",
+    fixed: true,
   },
   {
-    id: 5,
+    id: 1,
+    title: "Email Address",
+    required: true,
+    encrypted: true,
+    hidden: true,
+    type: "email",
+    fixed: true,
+  },
+  {
+    id: 2,
     title: "Amount requested",
     required: true,
     encrypted: false,
     hidden: true,
     type: "number",
+    fixed: true,
   },
   {
-    id: 6,
+    id: 3,
     title: "Payout token",
     required: true,
     encrypted: false,
     hidden: true,
     type: "dropdown",
     choices: ["ETH", "DAI"],
+    fixed: true,
   },
   {
-    id: 7,
+    id: 4,
     title: "Payout wallet address",
     required: true,
     encrypted: false,
     hidden: true,
     type: "address",
+    fixed: true,
+  },
+  {
+    id: 5,
+    title: "Milestones",
+    required: true,
+    encrypted: false,
+    hidden: false,
+    type: "paragraph",
+    fixed: true,
+  },
+  {
+    id: 6,
+    title: "Funding Sources",
+    required: true,
+    encrypted: false,
+    hidden: false,
+    type: "short-answer",
+  },
+  {
+    id: 7,
+    title: "Team Size",
+    required: true,
+    encrypted: false,
+    hidden: false,
+    type: "number",
   },
 ];
 
@@ -487,12 +524,13 @@ export function RoundApplicationForm(props: {
   );
 
   const ApplicationQuestions = () => {
-    const lockedQuestion = singleQuestion(payoutQuestion, -1);
-    const f = fields.map((field, i) => singleQuestion(field, i));
+    const f = fields.map((field, i) =>
+      singleQuestion(field, field.fixed ? -1 : i)
+    );
 
     return (
       <div>
-        {[lockedQuestion, ...f]}
+        {[...f]}
         <Button
           type="button"
           $variant="outline"
