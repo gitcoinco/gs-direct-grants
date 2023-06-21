@@ -23,8 +23,6 @@ import { datadogLogs } from "@datadog/browser-logs";
 import { Signer } from "@ethersproject/abstract-signer";
 import { deployQFVotingContract } from "../../features/api/votingStrategy/qfVotingStrategy";
 import { deployMerklePayoutStrategyContract } from "../../features/api/payoutStrategy/merklePayoutStrategy";
-import { registryFactoryContract } from "../../features/api/contracts";
-import { RegistryFactory__factory } from "../../types/generated/typechain";
 
 type SetStatusFn = React.Dispatch<SetStateAction<ProgressStatus>>;
 

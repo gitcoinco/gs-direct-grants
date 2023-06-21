@@ -403,7 +403,7 @@ export function RoundApplicationForm(props: {
         subheading={"Please hold while we create your Grant Round."}
         steps={
           roundCategory == RoundCategory.QuadraticFunding
-            ? (progressStepsQF as any)
+            ? progressStepsQF
             : progressStepsDirect
         }
       >

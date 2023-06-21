@@ -23,7 +23,6 @@ import { Spinner } from "../common/Spinner";
 import { useRounds } from "../../context/round/RoundContext";
 import { ProgressStatus, Round } from "../api/types";
 import { useDebugMode } from "../../hooks";
-import { ethers } from "ethers";
 import { maxDate } from "../../constants";
 import moment from "moment";
 

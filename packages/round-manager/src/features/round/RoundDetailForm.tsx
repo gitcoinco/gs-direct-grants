@@ -29,6 +29,7 @@ import { SupportType } from "../api/utils";
 import { FormStepper } from "../common/FormStepper";
 import { FormContext } from "../common/FormWizard";
 import { utils } from "ethers";
+import { maxDate } from "../../constants";
 
 export const RoundValidationSchema = yup.object().shape({
   roundMetadata: yup.object({
@@ -165,8 +166,7 @@ export function RoundDetailForm(props: RoundDetailFormProps) {
     handleSubmit,
     formState: { errors },
     setValue,
-    getValues,
-    getFieldState,
+    watch,
   } = useForm<Round>({
     defaultValues: {
       ...formData,
@@ -176,6 +176,8 @@ export function RoundDetailForm(props: RoundDetailFormProps) {
     context: { roundCategory },
     resolver: yupResolver(RoundValidationSchema),
   });
+
+  const isRoundEndTimeDisabled = watch("roundEndTimeDisabled");
 
   const FormStepper = props.stepper;
   const [applicationStartDate, setApplicationStartDate] = useState(moment());
@@ -523,7 +525,12 @@ export function RoundDetailForm(props: RoundDetailFormProps) {
                               onChange={(e) => {
                                 field.onChange(e.target.checked);
                                 if (e.target.checked) {
-                                  setValue("roundEndTime", null as any);
+                                  // reset input and trick type validation
+                                  // for direct round, when date is empty it will be set to maxDate
+                                  setValue(
+                                    "roundEndTime",
+                                    "" as unknown as Date
+                                  );
                                 }
                               }}
                             />
@@ -552,36 +559,41 @@ export function RoundDetailForm(props: RoundDetailFormProps) {
                       <Controller
                         control={control}
                         name="roundEndTime"
-                        render={({ field }) => (
-                          <Datetime
-                            {...field}
-                            closeOnSelect
-                            inputProps={{
-                              id: "roundEndTime",
-                              placeholder: "",
-                              className:
-                                "block w-full border-0 p-0 text-gray-900 placeholder-grey-400 focus:ring-0 text-sm",
-                            }}
-                            isValidDate={disableBeforeRoundStartDate}
-                            utc={true}
-                            // we need a renderInput because there is a bug with the library
-                            // if the input is cleared programmatically the value is removed
-                            // but the visual date is not updated
-                            // ref: https://stackoverflow.com/a/64972324/2524608
-                            renderInput={(props) => {
-                              return (
-                                <input
-                                  {...props}
-                                  value={
-                                    (field.value as unknown as Moment)?.format(
-                                      "YYYY-MM-DD HH:mm UTC"
-                                    ) ?? ""
-                                  }
-                                />
-                              );
-                            }}
-                          />
-                        )}
+                        render={({ field }) => {
+                          return (
+                            <Datetime
+                              {...field}
+                              closeOnSelect
+                              inputProps={{
+                                id: "roundEndTime",
+                                placeholder: "",
+                                disabled: isRoundEndTimeDisabled,
+                                className:
+                                  "block w-full border-0 p-0 text-gray-900 placeholder-grey-400 focus:ring-0 text-sm",
+                              }}
+                              isValidDate={disableBeforeRoundStartDate}
+                              utc={true}
+                              // we use renderInput because there is a bug with the library
+                              // if the input is cleared programmatically the value is removed
+                              // but the visual date is not updated
+                              // ref: https://stackoverflow.com/a/64972324/2524608
+                              renderInput={(props) => {
+                                return (
+                                  <input
+                                    {...props}
+                                    value={
+                                      field.value
+                                        ? moment(field.value).format(
+                                            "YYYY-MM-DD HH:mm UTC"
+                                          )
+                                        : ""
+                                    }
+                                  />
+                                );
+                              }}
+                            />
+                          );
+                        }}
                       />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <svg
