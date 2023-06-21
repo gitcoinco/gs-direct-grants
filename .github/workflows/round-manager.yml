@@ -34,6 +34,6 @@ jobs:
         run: |
           pnpm rm-build
 
-      # - name: Test Round Manager
-      #   run: |
-      #     pnpm rm-test
+      - name: Test Round Manager
+        run: |
+          pnpm rm-test
