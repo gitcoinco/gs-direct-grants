@@ -52,6 +52,7 @@ export async function listPrograms(
           }
         }
       `;
+
       const res = await graphql_fetch(
         query,
         chainId,
@@ -61,6 +62,10 @@ export async function listPrograms(
       );
 
       const programs: Program[] = [];
+
+      if (!res.data.account) {
+        return programs;
+      }
 
       for (const project of res.data.account.projects) {
         const metadata = await fetchFromIPFS(
