@@ -23,8 +23,13 @@ import { Spinner } from "../common/Spinner";
 import { useRounds } from "../../context/round/RoundContext";
 import { ProgressStatus, Round } from "../api/types";
 import { useDebugMode } from "../../hooks";
-import { maxDate } from "../../constants";
+import {
+  PAYOUT_STRATEGY_DIRECT,
+  PAYOUT_STRATEGY_MERKLE,
+  maxDate,
+} from "../../constants";
 import moment from "moment";
+import { getRoundDescriptionStatus } from "./getRoundDescriptionStatus";
 
 export default function ViewProgram() {
   datadogLogs.logger.info("====> Route: /program/:id");
@@ -75,11 +80,24 @@ export default function ViewProgram() {
               className="relative w-full border-t border-b border-grey-100 bg-white py-4 my-4 flex items-center justify-between space-x-3"
             >
               <div className="flex-1 min-w-0">
+                {/* Round type */}
+                <div>
+                  {round.payoutStrategy.strategyName == PAYOUT_STRATEGY_MERKLE
+                    ? "Quadratic Funding"
+                    : round.payoutStrategy.strategyName ==
+                      PAYOUT_STRATEGY_DIRECT
+                    ? "Direct Grants"
+                    : round.payoutStrategy.strategyName}
+                </div>
+
+                {/* Round name */}
                 <p className="text-sm pb-3 mb-1 font-medium text-gray-900">
                   {round.roundMetadata.name}
                 </p>
 
+                {/* Round details */}
                 <div className="grid sm:grid-cols-3">
+                  {/* Application */}
                   <p className="text-xs flex gap-1">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -117,6 +135,7 @@ export default function ViewProgram() {
                       </p>
                     </div>
                   </p>
+                  {/* Round */}
                   <p className="text-xs flex gap-1 md:ml-8">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -153,6 +172,8 @@ export default function ViewProgram() {
                       </p>
                     </span>
                   </p>
+
+                  <div>{getRoundDescriptionStatus(round)}</div>
                 </div>
               </div>
 
@@ -299,7 +320,7 @@ export default function ViewProgram() {
                 )}
               </div>
 
-              {isRoundsFetched && roundItems.length === 0 && noRoundsGroup}
+              {/* {isRoundsFetched && roundItems.length === 0 && noRoundsGroup} */}
             </main>
           </div>
           <Footer />

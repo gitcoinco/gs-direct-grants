@@ -194,7 +194,8 @@ export interface Round {
    */
   payoutStrategy: {
     id: string;
-    isReadyForPayout: boolean;
+    isReadyForPayout?: boolean;
+    strategyName?: string;
   };
   /**
    * Used in RoundCategory.Direct
