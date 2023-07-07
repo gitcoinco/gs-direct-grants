@@ -33,7 +33,13 @@ import Footer from "common/src/components/Footer";
 import Navbar from "../common/Navbar";
 import NotFoundPage from "../common/NotFoundPage";
 import { Spinner } from "../common/Spinner";
-import { horizontalTabStyles, verticalTabStyles } from "../common/Utils";
+import {
+  ROUND_PAYOUT_DIRECT,
+  ROUND_PAYOUT_MERKLE,
+  getPayoutRoundDescription,
+  horizontalTabStyles,
+  verticalTabStyles,
+} from "../common/Utils";
 import ApplicationsApproved from "./ApplicationsApproved";
 import ApplicationsReceived from "./ApplicationsReceived";
 import ApplicationsRejected from "./ApplicationsRejected";
@@ -43,6 +49,8 @@ import ViewFundGrantees from "./ViewFundGrantees";
 import ViewRoundResults from "./ViewRoundResults/ViewRoundResults";
 import ViewRoundSettings from "./ViewRoundSettings";
 import ViewRoundStats from "./ViewRoundStats";
+import { RoundDates, parseRoundDates } from "../common/parseRoundDates";
+import moment from "moment";
 
 export default function ViewRoundPage() {
   datadogLogs.logger.info("====> Route: /round/:id");
@@ -87,20 +95,21 @@ export default function ViewRoundPage() {
                 <Link to={`/round/${id}`}>
                   <span>{"Round Details"}</span>
                 </Link>
+
+                <RoundBadgeStatus round={round} />
               </div>
+              {getPayoutRoundDescription(
+                round.payoutStrategy.strategyName || ""
+              )}
               <div className="flex flex-row mb-4 mt-4 items-center">
                 <RoundName round={round} />
               </div>
-
               <div className="flex flex-row flex-wrap relative">
-                <ApplicationOpenDateRange
-                  startTime={round?.applicationsStartTime}
-                  endTime={round?.applicationsEndTime}
-                />
-                <RoundOpenDateRange
-                  startTime={round?.roundStartTime}
-                  endTime={round?.roundEndTime}
-                />
+                {round.payoutStrategy.strategyName == ROUND_PAYOUT_MERKLE && (
+                  <ApplicationOpenDateRange round={round} />
+                )}
+                <RoundOpenDateRange round={round} />
+
                 <div className="absolute right-0">
                   <ViewGrantsExplorerButton
                     iconStyle="h-4 w-4"
@@ -499,8 +508,8 @@ function redirectToGrantExplorer(chainId: string, roundId: string | undefined) {
   }, 1000);
 }
 
-function ApplicationOpenDateRange(props: { startTime?: Date; endTime?: Date }) {
-  const { startTime, endTime } = props;
+function ApplicationOpenDateRange({ round }: { round: RoundDates }) {
+  const res = parseRoundDates(round);
 
   return (
     <div className="flex mr-8 lg:mr-36">
@@ -508,24 +517,26 @@ function ApplicationOpenDateRange(props: { startTime?: Date; endTime?: Date }) {
       <p className="text-sm mr-2 text-grey-400">Applications:</p>
       <div>
         <p className="text-sm">
-          <span>
-            {(startTime && formatUTCDateAsISOString(startTime)) || "..."}
-          </span>
+          <span>{res.application.iso.start}</span>
           <span className="mx-2">-</span>
-          <span>{(endTime && formatUTCDateAsISOString(endTime)) || "..."}</span>
+          <span>{res.application.iso.end}</span>
         </p>
         <p className="flex justify-center items-center text-sm text-grey-400">
-          <span>({(startTime && getUTCTime(startTime)) || "..."})</span>
-          <span className="mx-2">-</span>
-          <span>({(endTime && getUTCTime(endTime)) || "..."})</span>
+          <span>({res.application.utc.start})</span>
+          {res.application.utc.end && (
+            <>
+              <span className="mx-2">-</span>
+              <span>({res.application.utc.end})</span>
+            </>
+          )}
         </p>
       </div>
     </div>
   );
 }
 
-function RoundOpenDateRange(props: { startTime?: Date; endTime?: Date }) {
-  const { startTime, endTime } = props;
+function RoundOpenDateRange({ round }: { round: RoundDates }) {
+  const res = parseRoundDates(round);
 
   return (
     <div className="flex">
@@ -533,18 +544,42 @@ function RoundOpenDateRange(props: { startTime?: Date; endTime?: Date }) {
       <p className="text-sm mr-2 text-grey-400">Round:</p>
       <div>
         <p className="flex justify-center items-center text-sm">
-          <span>
-            {(startTime && formatUTCDateAsISOString(startTime)) || "..."}
-          </span>
+          <span>{res.round.iso.start}</span>
           <span className="mx-2">-</span>
-          <span>{(endTime && formatUTCDateAsISOString(endTime)) || "..."}</span>
+          <span>{res.round.iso.end}</span>
         </p>
         <p className="flex justify-center items-center text-sm text-grey-400">
-          <span>({(startTime && getUTCTime(startTime)) || "..."})</span>
-          <span className="mx-2">-</span>
-          <span>({(endTime && getUTCTime(endTime)) || "..."})</span>
+          <span>{res.round.utc.start}</span>
+          {res.round.utc.end && (
+            <>
+              <span className="mx-2">-</span>
+              <span>{res.round.utc.end}</span>
+            </>
+          )}
         </p>
       </div>
     </div>
   );
+}
+
+function RoundBadgeStatus({ round }: { round: Round }) {
+  const applicationEnds = round.applicationsEndTime;
+  const roundEnds = round.roundEndTime;
+  const now = moment();
+
+  if (
+    (round.payoutStrategy.strategyName == ROUND_PAYOUT_MERKLE &&
+      now.isBefore(applicationEnds)) ||
+    (round.payoutStrategy.strategyName == ROUND_PAYOUT_DIRECT &&
+      now.isBefore(roundEnds))
+  ) {
+    return (
+      <div className="flex items-center">
+        <div className="bg-green-100 rounded-full h-2 w-2 mr-2"></div>
+        <p className="text-sm text-green-500">Applications in progress</p>
+      </div>
+    );
+  }
+
+  return null;
 }

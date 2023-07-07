@@ -195,6 +195,7 @@ export interface Round {
   payoutStrategy: {
     id: string;
     isReadyForPayout?: boolean;
+    vaultAddress?: string;
     strategyName?: string;
   };
   /**

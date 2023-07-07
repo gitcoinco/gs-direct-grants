@@ -12,7 +12,6 @@ import { useWallet } from "../common/Auth";
 import Navbar from "../common/Navbar";
 import Footer from "common/src/components/Footer";
 import { abbreviateAddress } from "../api/utils";
-import { formatUTCDateAsISOString, getUTCTime } from "common";
 import { datadogLogs } from "@datadog/browser-logs";
 import { useEffect, useState } from "react";
 import NotFoundPage from "../common/NotFoundPage";
@@ -21,15 +20,11 @@ import AccessDenied from "../common/AccessDenied";
 import { useProgramById } from "../../context/program/ReadProgramContext";
 import { Spinner } from "../common/Spinner";
 import { useRounds } from "../../context/round/RoundContext";
-import { ProgressStatus, Round } from "../api/types";
+import { ProgressStatus } from "../api/types";
 import { useDebugMode } from "../../hooks";
-import {
-  PAYOUT_STRATEGY_DIRECT,
-  PAYOUT_STRATEGY_MERKLE,
-  maxDate,
-} from "../../constants";
-import moment from "moment";
 import { getRoundDescriptionStatus } from "./getRoundDescriptionStatus";
+import { parseRoundDates } from "../common/parseRoundDates";
+import { getPayoutRoundDescription } from "../common/Utils";
 
 export default function ViewProgram() {
   datadogLogs.logger.info("====> Route: /program/:id");
@@ -71,7 +66,7 @@ export default function ViewProgram() {
 
   const roundItems = rounds
     ? rounds.map((round, index) => {
-        const parsedRoundInfo = formatRound(round);
+        const parsedRoundInfo = parseRoundDates(round);
 
         return (
           <Link to={`/round/${round.id}`} key={index}>
@@ -82,12 +77,9 @@ export default function ViewProgram() {
               <div className="flex-1 min-w-0">
                 {/* Round type */}
                 <div>
-                  {round.payoutStrategy.strategyName == PAYOUT_STRATEGY_MERKLE
-                    ? "Quadratic Funding"
-                    : round.payoutStrategy.strategyName ==
-                      PAYOUT_STRATEGY_DIRECT
-                    ? "Direct Grants"
-                    : round.payoutStrategy.strategyName}
+                  {getPayoutRoundDescription(
+                    round.payoutStrategy.strategyName || ""
+                  )}
                 </div>
 
                 {/* Round name */}
@@ -328,39 +320,4 @@ export default function ViewProgram() {
       )}
     </>
   );
-
-  function formatRound(round: Round) {
-    const noEndTime = "No end time";
-
-    return {
-      application: {
-        iso: {
-          start: formatUTCDateAsISOString(round.applicationsStartTime),
-          end: moment(round.applicationsEndTime).isSame(maxDate)
-            ? noEndTime
-            : formatUTCDateAsISOString(round.applicationsEndTime),
-        },
-        utc: {
-          start: getUTCTime(round.applicationsStartTime),
-          end: moment(round.applicationsEndTime).isSame(maxDate)
-            ? ""
-            : `(${getUTCTime(round.applicationsEndTime)})`,
-        },
-      },
-      round: {
-        iso: {
-          start: formatUTCDateAsISOString(round.roundStartTime),
-          end: moment(round.roundEndTime).isSame(maxDate)
-            ? noEndTime
-            : formatUTCDateAsISOString(round.roundEndTime),
-        },
-        utc: {
-          start: `(${getUTCTime(round.roundStartTime)})`,
-          end: moment(round.roundEndTime).isSame(maxDate)
-            ? ""
-            : `(${getUTCTime(round.roundEndTime)})`,
-        },
-      },
-    };
-  }
 }

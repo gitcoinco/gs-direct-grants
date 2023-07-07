@@ -132,7 +132,14 @@ export async function getRoundById(
               }
               payoutStrategy {
                 id
-                isReadyForPayout
+                strategyName
+                type: __typename
+                ... on DirectPayout {
+                  vaultAddress
+                }
+                ... on MerklePayout {
+                  isReadyForPayout
+                }
               }
             }
           }
@@ -182,9 +189,13 @@ export async function getRoundById(
       applicationsStartTime: new Date(
         Number(round.applicationsStartTime) * 1000
       ),
-      applicationsEndTime: new Date(Number(round.applicationsEndTime) * 1000),
+      applicationsEndTime: ethers.constants.MaxUint256
+        ? maxDate
+        : new Date(Number(round.applicationsEndTime) * 1000),
       roundStartTime: new Date(Number(round.roundStartTime) * 1000),
-      roundEndTime: new Date(Number(round.roundEndTime) * 1000),
+      roundEndTime: ethers.constants.MaxUint256
+        ? maxDate
+        : new Date(Number(round.roundEndTime) * 1000),
       protocolFeePercentage: protocolFeePercentage,
       roundFeePercentage: roundFeePercentage,
       token: round.token,
