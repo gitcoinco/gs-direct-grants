@@ -12,7 +12,6 @@ import {
   InboxIcon,
   UserGroupIcon,
 } from "@heroicons/react/solid";
-import { formatUTCDateAsISOString, getUTCTime } from "common";
 import { Button } from "common/src/styles";
 import { Link, useParams } from "react-router-dom";
 import tw from "tailwind-styled-components";
@@ -51,7 +50,6 @@ import ViewRoundSettings from "./ViewRoundSettings";
 import ViewRoundStats from "./ViewRoundStats";
 import { RoundDates, parseRoundDates } from "../common/parseRoundDates";
 import moment from "moment";
-import { ApplicationsInReview } from "./ApplicationsInReview";
 
 export default function ViewRoundPage() {
   datadogLogs.logger.info("====> Route: /round/:id");

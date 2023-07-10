@@ -312,7 +312,7 @@ export default function ViewProgram() {
                 )}
               </div>
 
-              {/* {isRoundsFetched && roundItems.length === 0 && noRoundsGroup} */}
+              {isRoundsFetched && roundItems.length === 0 && noRoundsGroup}
             </main>
           </div>
           <Footer />
