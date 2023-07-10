@@ -375,6 +375,7 @@ export enum ApplicationStatus {
   APPROVED = "APPROVED",
   REJECTED = "REJECTED",
   CANCELLED = "CANCELLED",
+  IN_REVIEW = "IN_REVIEW",
 }
 
 export type Status = {

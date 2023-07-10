@@ -7,7 +7,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import ApplicationsReceived from "../ApplicationsReceived";
+import ApplicationsByStatus from "../ApplicationsByStatus";
 import { makeGrantApplicationData } from "../../../test-utils";
 import {
   ApplicationContext,
@@ -65,7 +65,7 @@ grantApplications.forEach((application) => {
 const bulkUpdateGrantApplications = jest.fn();
 
 function setupInBulkSelectionMode() {
-  renderWithContext(<ApplicationsReceived />, {
+  renderWithContext(<ApplicationsByStatus />, {
     applications: grantApplications,
     isLoading: false,
   });
@@ -84,7 +84,7 @@ describe("<ApplicationsReceived />", () => {
   });
 
   it("should display a loading spinner if received applications are loading", () => {
-    renderWithContext(<ApplicationsReceived />, {
+    renderWithContext(<ApplicationsByStatus />, {
       applications: [],
       isLoading: true,
     });
@@ -94,7 +94,7 @@ describe("<ApplicationsReceived />", () => {
 
   describe("when there are no approved applications", () => {
     it("should not display the bulk select option", () => {
-      renderWithContext(<ApplicationsReceived />, {
+      renderWithContext(<ApplicationsByStatus />, {
         applications: [],
         isLoading: false,
       });
@@ -114,7 +114,7 @@ describe("<ApplicationsReceived />", () => {
 
   describe("when received applications are shown", () => {
     it("should display the bulk select option", () => {
-      renderWithContext(<ApplicationsReceived />, {
+      renderWithContext(<ApplicationsByStatus />, {
         applications: grantApplications,
         isLoading: false,
       });
@@ -167,7 +167,7 @@ describe("<ApplicationsReceived />", () => {
   });
 
   it("renders no cards when there are no projects", () => {
-    renderWithContext(<ApplicationsReceived />, {
+    renderWithContext(<ApplicationsByStatus />, {
       applications: [],
       isLoading: false,
     });
@@ -176,7 +176,7 @@ describe("<ApplicationsReceived />", () => {
   });
 
   it("renders a card for every project with PENDING status", () => {
-    renderWithContext(<ApplicationsReceived />, {
+    renderWithContext(<ApplicationsByStatus />, {
       applications: grantApplications,
       isLoading: false,
     });
@@ -399,7 +399,7 @@ describe("<ApplicationsReceived />", () => {
 
   describe("when bulkSelect is false", () => {
     it("does not render approve and reject options on each card", () => {
-      renderWithContext(<ApplicationsReceived />);
+      renderWithContext(<ApplicationsByStatus />);
       expect(
         screen.queryAllByTestId("bulk-approve-reject-buttons")
       ).toHaveLength(0);
@@ -414,7 +414,7 @@ describe("<ApplicationsReceived />", () => {
       });
 
       renderWithContext(
-        <ApplicationsReceived />,
+        <ApplicationsByStatus />,
         {
           applications: grantApplications,
         },

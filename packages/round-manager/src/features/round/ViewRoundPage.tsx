@@ -41,7 +41,7 @@ import {
   verticalTabStyles,
 } from "../common/Utils";
 import ApplicationsApproved from "./ApplicationsApproved";
-import ApplicationsReceived from "./ApplicationsReceived";
+import ApplicationsByStatus from "./ApplicationsByStatus";
 import ApplicationsRejected from "./ApplicationsRejected";
 import FundContract from "./FundContract";
 import ReclaimFunds from "./ReclaimFunds";
@@ -51,6 +51,7 @@ import ViewRoundSettings from "./ViewRoundSettings";
 import ViewRoundStats from "./ViewRoundStats";
 import { RoundDates, parseRoundDates } from "../common/parseRoundDates";
 import moment from "moment";
+import { ApplicationsInReview } from "./ApplicationsInReview";
 
 export default function ViewRoundPage() {
   datadogLogs.logger.info("====> Route: /round/:id");
@@ -293,6 +294,10 @@ export default function ViewRoundPage() {
                   <Tab.Panels className="basis-5/6 ml-6">
                     <Tab.Panel>
                       <GrantApplications
+                        isDirect={
+                          round.payoutStrategy.strategyName ==
+                          ROUND_PAYOUT_DIRECT
+                        }
                         applications={applications}
                         isRoundsFetched={isRoundFetched}
                         fetchRoundStatus={fetchRoundStatus}
@@ -340,6 +345,7 @@ export default function ViewRoundPage() {
 }
 
 function GrantApplications(props: {
+  isDirect?: boolean;
   applications: GrantApplication[] | undefined;
   isRoundsFetched: boolean;
   fetchRoundStatus: ProgressStatus;
@@ -357,6 +363,10 @@ function GrantApplications(props: {
   const rejectedApplications =
     props.applications?.filter(
       (a) => a.status === ApplicationStatus.REJECTED.toString()
+    ) || [];
+  const inReviewApplications =
+    props.applications?.filter(
+      (a) => a.status === ApplicationStatus.IN_REVIEW.toString()
     ) || [];
 
   const TabApplicationCounter = tw.div`
@@ -397,6 +407,27 @@ function GrantApplications(props: {
                         </div>
                       )}
                     </Tab>
+                    {props.isDirect && (
+                      <Tab
+                        className={({ selected }) =>
+                          horizontalTabStyles(selected)
+                        }
+                      >
+                        {({ selected }) => (
+                          <div className={selected ? "text-violet-500" : ""}>
+                            In Review
+                            <TabApplicationCounter
+                              className={
+                                selected ? "bg-violet-100" : "bg-grey-150"
+                              }
+                              data-testid="received-application-counter"
+                            >
+                              {inReviewApplications?.length || 0}
+                            </TabApplicationCounter>
+                          </div>
+                        )}
+                      </Tab>
+                    )}
                     <Tab
                       className={({ selected }) =>
                         horizontalTabStyles(selected)
@@ -447,8 +478,15 @@ function GrantApplications(props: {
               </div>
               <Tab.Panels>
                 <Tab.Panel>
-                  <ApplicationsReceived />
+                  <ApplicationsByStatus />
                 </Tab.Panel>
+                {props.isDirect && (
+                  <Tab.Panel>
+                    <ApplicationsByStatus
+                      status={ApplicationStatus.IN_REVIEW}
+                    />
+                  </Tab.Panel>
+                )}
                 <Tab.Panel>
                   <ApplicationsApproved />
                 </Tab.Panel>
