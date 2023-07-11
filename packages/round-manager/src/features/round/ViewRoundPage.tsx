@@ -73,6 +73,8 @@ export default function ViewRoundPage() {
 
   const roundNotFound = fetchRoundStatus === ProgressStatus.IS_ERROR;
 
+  const isQF = round && round.payoutStrategy.strategyName === ROUND_PAYOUT_MERKLE;
+
   return (
     <>
       {roundNotFound && <NotFoundPage />}
@@ -218,29 +220,31 @@ export default function ViewRoundPage() {
                           </div>
                         )}
                       </Tab>
-                      <Tab
-                        className={({ selected }) =>
-                          verticalTabStyles(selected)
-                        }
-                      >
-                        {({ selected }) => (
-                          <div
-                            className={
-                              selected
-                                ? "text-black-500 flex flex-row"
-                                : "flex flex-row"
-                            }
-                          >
-                            <DocumentReportIcon className="h-6 w-6 mr-2" />
-                            <span
-                              className="mt-0.5"
-                              data-testid="round-results"
+                      {isQF && (
+                        <Tab
+                          className={({ selected }) =>
+                            verticalTabStyles(selected)
+                          }
+                        >
+                          {({ selected }) => (
+                            <div
+                              className={
+                                selected
+                                  ? "text-black-500 flex flex-row"
+                                  : "flex flex-row"
+                              }
                             >
-                              Round Results
-                            </span>
-                          </div>
-                        )}
-                      </Tab>
+                              <DocumentReportIcon className="h-6 w-6 mr-2" />
+                              <span
+                                className="mt-0.5"
+                                data-testid="round-results"
+                              >
+                                Round Results
+                              </span>
+                            </div>
+                          )}
+                        </Tab>
+                      )}
                       <Tab
                         className={({ selected }) =>
                           verticalTabStyles(selected)
