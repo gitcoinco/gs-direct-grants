@@ -429,7 +429,7 @@ export default function ViewRoundSettings(props: { id?: string }) {
                       </div>
                     )}
                   </Tab>
-                )};
+                )}
               </div>
             </Tab.List>
           </div>
