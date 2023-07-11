@@ -39,7 +39,7 @@ import ConfirmationModal from "../common/ConfirmationModal";
 import ErrorModal from "../common/ErrorModal";
 import FormValidationErrorList from "../common/FormValidationErrorList";
 import ProgressModal from "../common/ProgressModal";
-import { horizontalTabStyles } from "../common/Utils";
+import { ROUND_PAYOUT_MERKLE, horizontalTabStyles } from "../common/Utils";
 import { PayoutTokenInformation } from "./QuadraticFundingForm";
 import {
   RoundValidationSchema,
@@ -340,6 +340,8 @@ export default function ViewRoundSettings(props: { id?: string }) {
     },
   ];
 
+  const isQF = round && round.payoutStrategy.strategyName === ROUND_PAYOUT_MERKLE;
+
   return (
     <div
       key={editedRound?.id}
@@ -417,15 +419,17 @@ export default function ViewRoundSettings(props: { id?: string }) {
                     </div>
                   )}
                 </Tab>
-                <Tab
-                  className={({ selected }) => horizontalTabStyles(selected)}
-                >
-                  {({ selected }) => (
-                    <div className={selected ? "text-violet-500" : ""}>
-                      Funding Settings
-                    </div>
-                  )}
-                </Tab>
+                {isQF && (
+                  <Tab
+                    className={({ selected }) => horizontalTabStyles(selected)}
+                  >
+                    {({ selected }) => (
+                      <div className={selected ? "text-violet-500" : ""}>
+                        Funding Settings
+                      </div>
+                    )}
+                  </Tab>
+                )};
               </div>
             </Tab.List>
           </div>
