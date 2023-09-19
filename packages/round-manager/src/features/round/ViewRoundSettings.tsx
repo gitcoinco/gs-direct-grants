@@ -1673,6 +1673,13 @@ function RoundApplicationPeriod(props: {
                         <Datetime
                           {...field}
                           {...props.register("roundEndTime")}
+                          value={
+                            noRoundEndDate
+                              ? ""
+                              : `${getUTCDate(
+                                  editedRound.roundEndTime
+                                )} ${getUTCTime(editedRound.roundEndTime)}`
+                          }
                           closeOnSelect
                           onChange={(date) => {
                             field.onChange(moment(date).toDate());
@@ -1736,7 +1743,7 @@ function RoundApplicationPeriod(props: {
                   className={`${
                     !props.editMode.canEdit ? "bg-grey-50" : ""
                   } border-0 pt-0 pl-2 -mt-2 text-sm`}
-                  defaultValue={
+                  value={
                     noRoundEndDate
                       ? ""
                       : `${getUTCDate(editedRound.roundEndTime)} ${getUTCTime(
